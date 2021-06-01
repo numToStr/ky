@@ -1,13 +1,29 @@
-use crate::{cli::Config, lib::KyError};
+use super::Command;
+use crate::{
+    cli::Config,
+    lib::{Database, KyError, Password},
+};
 use clap::Clap;
 
-use super::Command;
+const MASTER: &str = "master";
 
 #[derive(Debug, Clap)]
-pub struct Init {}
+pub struct Init;
 
 impl Command for Init {
-    fn exec(&self, _: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> Result<(), KyError> {
+        let db = Database::new(config.db_path())?;
+
+        if db.exist(MASTER)? {
+            return Err(KyError::Initialized);
+        }
+
+        let password = Password::init()?;
+
+        let hashed = password.hash()?;
+
+        db.set(MASTER, &hashed)?;
+
         Ok(())
     }
 }

@@ -12,6 +12,9 @@ license = "MIT"
 rocksdb = { version = "0.16.0", default-features = false, features = ["lz4"] }
 thiserror = "1.0.25"
 clap = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
+dialoguer = "0.8.0"
+argon2 = "0.2.1"
+rand_core = { version  = "0.6.2", features = ["std"] }
 
 [profile.dev]
 debug = 0

@@ -19,6 +19,14 @@ impl Database {
         Ok(Self { conn })
     }
 
+    pub fn exist(&self, key: &'static str) -> Result<bool, KyError> {
+        Ok(self
+            .conn
+            .get_pinned(key)
+            .map_err(|x| KyError::Any(x.to_string()))?
+            .is_some())
+    }
+
     pub fn get(&self, key: &'static str) -> Result<String, KyError> {
         let bytes = self.conn.get(key).map_err(|_| KyError::Get(key))?;
 

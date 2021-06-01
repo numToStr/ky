@@ -1,3 +1,4 @@
+use std::io;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -18,7 +19,19 @@ pub enum KyError {
 
     #[error("Unable to set the value for `{0}`")]
     Set(&'static str),
+
+    #[error("Vault already initialized")]
+    Initialized,
+
     // #[error("Unable to delete the value for `{0}`")]
     // Delete(&'static str),
     // #endregion
+    #[error("Unable to hash the password")]
+    Hashing,
+}
+
+impl From<io::Error> for KyError {
+    fn from(s: io::Error) -> Self {
+        Self::Any(s.to_string())
+    }
 }
