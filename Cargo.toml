@@ -11,6 +11,7 @@ license = "MIT"
 [dependencies]
 rocksdb = { version = "0.16.0", default-features = false, features = ["lz4"] }
 thiserror = "1.0.25"
+clap = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
 
 [profile.dev]
 debug = 0

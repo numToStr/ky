@@ -1,10 +1,19 @@
+mod cli;
 mod lib;
-
-use lib::Database;
+mod subcommand;
 
 fn main() {
-    let db = Database::new("lok.db").unwrap();
-    let key = "hello";
-    db.set(key, "world").unwrap();
-    println!("{:#?}", db.get(key));
+    let app = cli::parse();
+
+    app.cmd.exec()
+
+    // let code = match app.cmd.exec() {
+    //     Ok(_) => 0,
+    //     Err(e) => {
+    //         eprintln!("ERROR :: {}", e.to_string().bright_red());
+    //         1
+    //     }
+    // };
+    //
+    // std::process::exit(code)
 }
