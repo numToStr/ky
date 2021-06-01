@@ -1,8 +1,10 @@
 [package]
-name = "lok"
-version = "0.1.0"
+name = "ky"
+description = "Simple password manager written in rust"
+version = "0.0.1"
 authors = ["numtostr <vikasraj1911@gmail.com>"]
 edition = "2018"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

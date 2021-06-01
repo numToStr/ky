@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum LokError {
+pub enum KyError {
     // Generic and Unknown error, that I don't want to handle
     #[error("Something went wrong: `{0}")]
     Any(String),
@@ -18,8 +18,7 @@ pub enum LokError {
 
     #[error("Unable to set the value for `{0}`")]
     Set(&'static str),
-
-    #[error("Unable to delete the value for `{0}`")]
-    Delete(&'static str),
+    // #[error("Unable to delete the value for `{0}`")]
+    // Delete(&'static str),
     // #endregion
 }
