@@ -28,7 +28,10 @@ impl Database {
     }
 
     pub fn get(&self, key: &'static str) -> Result<String, KyError> {
-        let bytes = self.conn.get(key).map_err(|_| KyError::Get(key))?;
+        let bytes = self
+            .conn
+            .get(key)
+            .map_err(|_| KyError::Get(key.to_string()))?;
 
         match bytes {
             Some(x) => {
@@ -37,14 +40,24 @@ impl Database {
 
                 Ok(s)
             }
-            _ => Err(KyError::NotFound(key)),
+            _ => Err(KyError::NotFound(key.to_string())),
         }
     }
 
-    pub fn set(&self, key: &'static str, val: &str) -> Result<(), KyError> {
-        let res = self.conn.put(key, val).map_err(|_| KyError::Set(key))?;
+    pub fn set(&self, key: &str, val: &str) -> Result<(), KyError> {
+        let res = self
+            .conn
+            .put(key, val)
+            .map_err(|_| KyError::Set(key.to_string()))?;
 
         Ok(res)
+    }
+
+    pub fn create_entry(&self, key: &str, pwd: &str, nonce: &str) -> Result<(), KyError> {
+        self.set(&format!("{}:password", key), &pwd)?;
+        self.set(&format!("{}:nonce", key), &nonce)?;
+
+        Ok(())
     }
 
     // pub fn delete(&self, key: &'static str) -> Result<(), KyError> {

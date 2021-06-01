@@ -1,5 +1,10 @@
-use argon2::{password_hash::SaltString, Argon2, PasswordHasher};
-use rand_core::OsRng;
+use std::fmt::{self, Display, Formatter};
+
+use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use rand::{rngs::OsRng, thread_rng, Rng};
+
+const CHARSET: &[u8] =
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><:;'[]{}?/";
 
 use super::KyError;
 
@@ -17,8 +22,17 @@ impl Password {
         Ok(Self { password })
     }
 
+    pub fn ask_master() -> Result<Self, KyError> {
+        let password = dialoguer::Password::new()
+            .with_prompt("Enter master password")
+            .interact()?;
+
+        Ok(Self { password })
+    }
+
     pub fn hash(&self) -> Result<String, KyError> {
         let salt = SaltString::generate(&mut OsRng);
+
         let argon = Argon2::default();
 
         let hash = argon
@@ -27,5 +41,34 @@ impl Password {
             .to_string();
 
         Ok(hash)
+    }
+
+    pub fn verify(&self, hash: &str) -> bool {
+        let parsed_hash = PasswordHash::new(hash).unwrap();
+
+        let argon = Argon2::default();
+
+        argon
+            .verify_password(self.password.as_bytes(), &parsed_hash)
+            .is_ok()
+    }
+
+    pub fn generate(len: u64) -> Self {
+        let mut rng = thread_rng();
+
+        let password: String = (0..len)
+            .map(|_| {
+                let idx = rng.gen_range(0..CHARSET.len());
+                CHARSET[idx] as char
+            })
+            .collect();
+
+        Self { password }
+    }
+}
+
+impl Display for Password {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.password)
     }
 }

@@ -7,6 +7,8 @@ use clap::Subcommand;
 
 use self::{add::Add, init::Init, remove::Remove};
 
+pub const MASTER: &str = "master";
+
 pub(self) trait Command {
     fn exec(&self, config: Config) -> Result<(), KyError>;
 }

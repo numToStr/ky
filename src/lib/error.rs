@@ -12,13 +12,13 @@ pub enum KyError {
     Connection,
 
     #[error("Value not found for key: `{0}`")]
-    NotFound(&'static str),
+    NotFound(String),
 
     #[error("Unable to get the value for `{0}`")]
-    Get(&'static str),
+    Get(String),
 
     #[error("Unable to set the value for `{0}`")]
-    Set(&'static str),
+    Set(String),
 
     #[error("Vault already initialized")]
     Initialized,
@@ -28,6 +28,9 @@ pub enum KyError {
     // #endregion
     #[error("Unable to hash the password")]
     Hashing,
+
+    #[error("Password mismatch")]
+    MisMatch,
 }
 
 impl From<io::Error> for KyError {

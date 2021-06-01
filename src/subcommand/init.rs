@@ -1,11 +1,9 @@
-use super::Command;
+use super::{Command, MASTER};
 use crate::{
     cli::Config,
     lib::{Database, KyError, Password},
 };
 use clap::Clap;
-
-const MASTER: &str = "master";
 
 #[derive(Debug, Clap)]
 pub struct Init;

@@ -14,7 +14,9 @@ thiserror = "1.0.25"
 clap = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
 dialoguer = "0.8.0"
 argon2 = "0.2.1"
-rand_core = { version  = "0.6.2", features = ["std"] }
+rand = { version = "0.8.3", features = ["std"] }
+aes-gcm-siv = "0.10.0"
+sha2 = "0.9.5"
 
 [profile.dev]
 debug = 0
