@@ -8,6 +8,10 @@ edition = "2018"
 
 [dependencies]
 rocksdb = { version = "0.16.0", default-features = false, features = ["lz4"] }
+thiserror = "1.0.25"
+
+[profile.dev]
+debug = 0
 
 [profile.release]
 lto = true

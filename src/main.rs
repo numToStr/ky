@@ -1,10 +1,10 @@
-mod db;
+mod lib;
 
-use db::Database;
+use lib::Database;
 
 fn main() {
-    let dbb = Database::new();
+    let db = Database::new("lok.db").unwrap();
     let key = "hello";
-    dbb.set(key, "world");
-    println!("{:#?}", dbb.get(key));
+    db.set(key, "world").unwrap();
+    println!("{:#?}", db.get(key));
 }
