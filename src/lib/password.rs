@@ -9,25 +9,25 @@ const CHARSET: &[u8] =
 use super::KyError;
 
 pub struct Password {
-    password: String,
+    raw: String,
 }
 
 impl Password {
     pub fn init() -> Result<Self, KyError> {
-        let password = dialoguer::Password::new()
+        let raw = dialoguer::Password::new()
             .with_prompt("New master password")
             .with_confirmation("Retype to verify", "Passwords didn't match")
             .interact()?;
 
-        Ok(Self { password })
+        Ok(Self { raw })
     }
 
     pub fn ask_master() -> Result<Self, KyError> {
-        let password = dialoguer::Password::new()
+        let raw = dialoguer::Password::new()
             .with_prompt("Enter master password")
             .interact()?;
 
-        Ok(Self { password })
+        Ok(Self { raw })
     }
 
     pub fn hash(&self) -> Result<String, KyError> {
@@ -36,7 +36,7 @@ impl Password {
         let argon = Argon2::default();
 
         let hash = argon
-            .hash_password_simple(self.password.as_bytes(), salt.as_ref())
+            .hash_password_simple(self.raw.as_bytes(), salt.as_ref())
             .map_err(|_| KyError::Hashing)?
             .to_string();
 
@@ -49,26 +49,26 @@ impl Password {
         let argon = Argon2::default();
 
         argon
-            .verify_password(self.password.as_bytes(), &parsed_hash)
+            .verify_password(self.raw.as_bytes(), &parsed_hash)
             .is_ok()
     }
 
     pub fn generate(len: u64) -> Self {
         let mut rng = thread_rng();
 
-        let password: String = (0..len)
+        let raw: String = (0..len)
             .map(|_| {
                 let idx = rng.gen_range(0..CHARSET.len());
                 CHARSET[idx] as char
             })
             .collect();
 
-        Self { password }
+        Self { raw }
     }
 }
 
 impl Display for Password {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.password)
+        write!(f, "{}", self.raw)
     }
 }

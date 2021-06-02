@@ -17,6 +17,7 @@ argon2 = "0.2.1"
 rand = { version = "0.8.3", features = ["std"] }
 aes-gcm-siv = "0.10.0"
 sha2 = "0.9.5"
+hex = "0.4.3"
 
 [profile.dev]
 debug = 0

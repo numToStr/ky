@@ -1,49 +1,56 @@
+use super::KyError;
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
 };
-use rand::{rngs::OsRng, RngCore};
 use sha2::{digest::Output, Digest, Sha256};
-
-use super::KyError;
 
 pub struct Encrypt<'a> {
     key: &'a str,
-    data: &'a str,
 }
 
-// TODO: handle .unwrap()
 impl<'a> Encrypt<'a> {
-    pub fn new(key: &'a str, data: &'a str) -> Self {
-        Self { key, data }
+    pub fn new(key: &'a str) -> Self {
+        Self { key }
     }
 
-    pub fn get_sha(&self) -> Output<Sha256> {
-        let mut sha_256 = Sha256::new();
-        sha_256.update(self.key.as_bytes());
-
-        sha_256.finalize()
+    fn get_sha(&self) -> Output<Sha256> {
+        Sha256::digest(self.key.as_bytes())
     }
 
-    pub fn encrypt(&self) -> Result<(String, String), KyError> {
+    pub fn encrypt(&self, data: &str) -> Result<String, KyError> {
         let key_sha = self.get_sha();
         let key = Key::from_slice(&key_sha);
         let cipher = Aes256GcmSiv::new(key);
 
-        let nonce = {
-            let mut v = [0u8; 12];
-            OsRng.fill_bytes(&mut v);
-            v
-        };
+        let nonce_secret: Vec<u8> = key_sha.into_iter().take(12).collect();
+        let nonce = Nonce::from_slice(&nonce_secret);
 
-        let nonce = Nonce::from_slice(&nonce);
+        let cipher_txt = cipher
+            .encrypt(nonce, data.as_bytes())
+            .map_err(|_| KyError::Encrypt)?;
 
-        let cipher_txt = cipher.encrypt(nonce, self.data.as_bytes()).unwrap();
-        let cipher_nonce = cipher.encrypt(nonce, nonce.as_ref()).unwrap();
+        let pwd_encrypted = hex::encode(&cipher_txt);
 
-        let txt_utf = String::from_utf8_lossy(&cipher_txt).to_string();
-        let nonce_utf = String::from_utf8_lossy(&cipher_nonce).to_string();
+        Ok(pwd_encrypted)
+    }
 
-        Ok((txt_utf, nonce_utf))
+    pub fn decrypt(&self, encrypted: &str) -> Result<String, KyError> {
+        let key_sha = self.get_sha();
+        let key = Key::from_slice(&key_sha);
+        let cipher = Aes256GcmSiv::new(key);
+
+        let nonce_secret: Vec<u8> = key_sha.into_iter().take(12).collect();
+        let nonce = Nonce::from_slice(&nonce_secret);
+
+        let slice = hex::decode(encrypted).map_err(|_| KyError::Decrypt)?;
+
+        let decrypted = cipher
+            .decrypt(nonce, &slice as &[u8])
+            .map_err(|_| KyError::Decrypt)?;
+
+        let pwd_decrypted = String::from_utf8(decrypted).map_err(|_| KyError::Decrypt)?;
+
+        Ok(pwd_decrypted)
     }
 }

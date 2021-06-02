@@ -7,16 +7,12 @@ use clap::Clap;
 use super::{Command, MASTER};
 
 #[derive(Debug, Clap)]
-pub struct Add {
+pub struct Show {
     /// Unique key for the entry
     key: String,
-
-    /// Length of the password
-    #[clap(short, long, default_value = "20")]
-    length: u64,
 }
 
-impl Command for Add {
+impl Command for Show {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         let master_pwd = Password::ask_master()?;
 
@@ -28,14 +24,12 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let new_pass = Password::generate(self.length);
+        let crypted = db.get(&self.key)?;
 
         let enc_key = master_pwd.to_string();
-        let enc_data = new_pass.to_string();
+        let decrypted = Encrypt::new(&enc_key).decrypt(&crypted).unwrap();
 
-        let pwd = Encrypt::new(&enc_key).encrypt(&enc_data)?;
-
-        db.set(&self.key, &pwd)?;
+        println!("{}", decrypted);
 
         Ok(())
     }

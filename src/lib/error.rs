@@ -31,6 +31,12 @@ pub enum KyError {
 
     #[error("Password mismatch")]
     MisMatch,
+
+    #[error("Unable to decrypt the provided data")]
+    Decrypt,
+
+    #[error("Unable to encrypt the provided data")]
+    Encrypt,
 }
 
 impl From<io::Error> for KyError {

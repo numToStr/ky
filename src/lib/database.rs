@@ -27,7 +27,7 @@ impl Database {
             .is_some())
     }
 
-    pub fn get(&self, key: &'static str) -> Result<String, KyError> {
+    pub fn get(&self, key: &str) -> Result<String, KyError> {
         let bytes = self
             .conn
             .get(key)
@@ -51,13 +51,6 @@ impl Database {
             .map_err(|_| KyError::Set(key.to_string()))?;
 
         Ok(res)
-    }
-
-    pub fn create_entry(&self, key: &str, pwd: &str, nonce: &str) -> Result<(), KyError> {
-        self.set(&format!("{}:password", key), &pwd)?;
-        self.set(&format!("{}:nonce", key), &nonce)?;
-
-        Ok(())
     }
 
     // pub fn delete(&self, key: &'static str) -> Result<(), KyError> {
