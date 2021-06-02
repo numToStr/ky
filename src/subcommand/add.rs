@@ -1,5 +1,5 @@
 use crate::{
-    cli::Config,
+    cli::{Config, PwdGenOpts},
     lib::{Database, Encrypt, KyError, Password},
 };
 use clap::Clap;
@@ -11,9 +11,8 @@ pub struct Add {
     /// Unique key for the entry
     key: String,
 
-    /// Length of the password
-    #[clap(short, long, default_value = "20")]
-    length: u64,
+    #[clap(flatten)]
+    pwd_opt: PwdGenOpts,
 }
 
 impl Command for Add {
@@ -28,7 +27,7 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let new_pass = Password::generate(self.length);
+        let new_pass = Password::generate(self.pwd_opt.length);
 
         let enc_key = master_pwd.to_string();
         let enc_data = new_pass.to_string();

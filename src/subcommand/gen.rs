@@ -1,5 +1,5 @@
 use crate::{
-    cli::Config,
+    cli::{Config, PwdGenOpts},
     lib::{KyError, Password},
     subcommand::Command,
 };
@@ -7,14 +7,13 @@ use clap::Clap;
 
 #[derive(Debug, Clap)]
 pub struct Generate {
-    /// Length of the password
-    #[clap(short, long, default_value = "20")]
-    length: u64,
+    #[clap(flatten)]
+    pwd_opt: PwdGenOpts,
 }
 
 impl Command for Generate {
     fn exec(&self, _: Config) -> Result<(), KyError> {
-        let password = Password::generate(self.length);
+        let password = Password::generate(self.pwd_opt.length);
 
         println!("{}", password);
 
