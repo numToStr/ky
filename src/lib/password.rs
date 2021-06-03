@@ -5,7 +5,7 @@ use rand::{rngs::OsRng, thread_rng, Rng};
 use std::fmt::{self, Display, Formatter};
 
 const CHARSET: &[u8] =
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><:;'[]{}?/";
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
 
 pub struct Password {
     raw: String,

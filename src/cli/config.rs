@@ -1,11 +1,15 @@
-use clap::Clap;
+use clap::{crate_name, Clap};
 use std::path::PathBuf;
 
 #[derive(Clap, Debug)]
 pub struct Config {
-    /// Path to the vault
+    /// Path to the password vault
     #[clap(long, name = "path", env = "KY_VAULT")]
     vault_path: Option<PathBuf>,
+
+    /// Prompt used inside the session
+    #[clap(long, env = "KY_PROMPT", default_value = concat!(crate_name!(), " $"))]
+    prompt: PathBuf,
 }
 
 impl Config {
