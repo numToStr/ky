@@ -17,7 +17,8 @@ pub struct Add {
 
 impl Command for Add {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let master_pwd = Password::ask_master()?;
+        let theme = Prompt::theme();
+        let master_pwd = Password::ask_master(&theme)?;
 
         let db = Database::new(config.db_path())?;
 
@@ -27,10 +28,10 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let username = Prompt::username()?;
-        let url = Prompt::url()?;
-        let expires = Prompt::expires()?;
-        let notes = Prompt::notes()?;
+        let username = Prompt::username(&theme)?;
+        let url = Prompt::url(&theme)?;
+        let expires = Prompt::expires(&theme)?;
+        let notes = Prompt::notes(&theme)?;
 
         let enc_key = master_pwd.to_string();
         let cipher = Cipher::new(&enc_key);

@@ -1,6 +1,7 @@
 use super::KyError;
 use crate::cli::PwdGenOpts;
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use dialoguer::theme::Theme;
 use rand::{rngs::OsRng, thread_rng, Rng};
 use std::fmt::{self, Display, Formatter};
 
@@ -12,8 +13,8 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn init() -> Result<Self, KyError> {
-        let raw = dialoguer::Password::new()
+    pub fn init(theme: &impl Theme) -> Result<Self, KyError> {
+        let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("New master password")
             .with_confirmation("Retype to verify", "Passwords didn't match")
             .interact()?;
@@ -21,8 +22,8 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn ask_master() -> Result<Self, KyError> {
-        let raw = dialoguer::Password::new()
+    pub fn ask_master(theme: &impl Theme) -> Result<Self, KyError> {
+        let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("Enter master password")
             .interact()?;
 

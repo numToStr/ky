@@ -1,7 +1,7 @@
 use super::{Command, MASTER};
 use crate::{
     cli::Config,
-    lib::{Database, KyError, Password},
+    lib::{Database, KyError, Password, Prompt},
 };
 use clap::Clap;
 
@@ -16,7 +16,7 @@ impl Command for Init {
             return Err(KyError::Initialized);
         }
 
-        let password = Password::init()?;
+        let password = Password::init(&Prompt::theme())?;
 
         let hashed = password.hash()?;
 

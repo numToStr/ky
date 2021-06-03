@@ -1,6 +1,6 @@
 use crate::{
     cli::Config,
-    lib::{Cipher, Database, KyError, Password},
+    lib::{Cipher, Database, KyError, Password, Prompt},
 };
 use clap::Clap;
 
@@ -14,7 +14,7 @@ pub struct Show {
 
 impl Command for Show {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let master_pwd = Password::ask_master()?;
+        let master_pwd = Password::ask_master(&Prompt::theme())?;
 
         let db = Database::new(config.db_path())?;
 

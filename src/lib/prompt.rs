@@ -1,13 +1,29 @@
 use super::KyError;
-use dialoguer::Input;
-
-pub struct Prompt;
+use dialoguer::{
+    console::{style, Style},
+    theme::{ColorfulTheme, Theme},
+    Input,
+};
 
 type PromptReturn = Result<Option<String>, KyError>;
 
+pub struct Prompt;
+
 impl Prompt {
-    fn prompt(title: &str) -> PromptReturn {
-        let input: String = Input::new()
+    pub fn theme() -> ColorfulTheme {
+        let p = '~';
+
+        ColorfulTheme {
+            prompt_prefix: style(p.to_string()).for_stderr().black().bright().bold(),
+            success_prefix: style(p.to_string()).for_stderr().white().bold(),
+            error_prefix: style(p.to_string()).for_stderr().red(),
+            values_style: Style::new().for_stderr().yellow(),
+            ..ColorfulTheme::default()
+        }
+    }
+
+    fn prompt(title: &str, theme: &impl Theme) -> PromptReturn {
+        let input: String = Input::with_theme(theme)
             .with_prompt(title)
             .allow_empty(true)
             .interact_text()?;
@@ -20,19 +36,19 @@ impl Prompt {
         Ok(new_input)
     }
 
-    pub fn username() -> PromptReturn {
-        Self::prompt("Username")
+    pub fn username(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("Username", theme)
     }
 
-    pub fn url() -> PromptReturn {
-        Self::prompt("URL")
+    pub fn url(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("URL", theme)
     }
 
-    pub fn expires() -> PromptReturn {
-        Self::prompt("Expires (dd/mm/yyyy)")
+    pub fn expires(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("Expires (dd/mm/yyyy)", theme)
     }
 
-    pub fn notes() -> PromptReturn {
-        Self::prompt("Notes")
+    pub fn notes(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("Notes", theme)
     }
 }
