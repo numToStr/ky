@@ -13,7 +13,7 @@ pub struct Generate {
 
 impl Command for Generate {
     fn exec(&self, _: Config) -> Result<(), KyError> {
-        let password = Password::generate(self.pwd_opt.length);
+        let password = Password::generate(&self.pwd_opt);
 
         println!("{}", password);
 

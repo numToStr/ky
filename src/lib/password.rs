@@ -1,12 +1,11 @@
-use std::fmt::{self, Display, Formatter};
-
+use super::KyError;
+use crate::cli::PwdGenOpts;
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use rand::{rngs::OsRng, thread_rng, Rng};
+use std::fmt::{self, Display, Formatter};
 
 const CHARSET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><:;'[]{}?/";
-
-use super::KyError;
 
 pub struct Password {
     raw: String,
@@ -53,10 +52,10 @@ impl Password {
             .is_ok()
     }
 
-    pub fn generate(len: u64) -> Self {
+    pub fn generate(opts: &PwdGenOpts) -> Self {
         let mut rng = thread_rng();
 
-        let raw: String = (0..len)
+        let raw: String = (0..opts.length)
             .map(|_| {
                 let idx = rng.gen_range(0..CHARSET.len());
                 CHARSET[idx] as char

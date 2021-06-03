@@ -1,6 +1,6 @@
 use crate::{
     cli::{Config, PwdGenOpts},
-    lib::{Database, Encrypt, KyError, Password},
+    lib::{Cipher, Database, KyError, Password, Prompt},
 };
 use clap::Clap;
 
@@ -27,14 +27,34 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let new_pass = Password::generate(self.pwd_opt.length);
+        let username = Prompt::username()?;
+        let url = Prompt::url()?;
+        let expires = Prompt::expires()?;
+        let notes = Prompt::notes()?;
 
         let enc_key = master_pwd.to_string();
-        let enc_data = new_pass.to_string();
+        let cipher = Cipher::new(&enc_key);
 
-        let pwd = Encrypt::new(&enc_key).encrypt(&enc_data)?;
+        let new_pass = Password::generate(&self.pwd_opt).to_string();
+        let pwd = cipher.encrypt(&new_pass)?;
 
-        db.set(&self.key, &pwd)?;
+        let fields = [username, url, expires, notes];
+
+        // I know that there can be only 5 data fields
+        let mut enc_data: Vec<String> = Vec::with_capacity(5);
+
+        enc_data.push(pwd);
+
+        for data in fields.iter() {
+            if let Some(d) = data {
+                let enc = cipher.encrypt(&d)?;
+                enc_data.push(enc);
+            } else {
+                enc_data.push("-".to_string());
+            }
+        }
+
+        db.set(&self.key, &enc_data.join(":"))?;
 
         Ok(())
     }

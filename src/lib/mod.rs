@@ -1,9 +1,11 @@
+mod cipher;
 mod database;
-mod encrypt;
 mod error;
 mod password;
+mod prompt;
 
+pub use cipher::*;
 pub use database::*;
-pub use encrypt::*;
 pub use error::*;
 pub use password::*;
+pub use prompt::*;

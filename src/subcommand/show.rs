@@ -1,6 +1,6 @@
 use crate::{
     cli::Config,
-    lib::{Database, Encrypt, KyError, Password},
+    lib::{Cipher, Database, KyError, Password},
 };
 use clap::Clap;
 
@@ -27,7 +27,7 @@ impl Command for Show {
         let crypted = db.get(&self.key)?;
 
         let enc_key = master_pwd.to_string();
-        let decrypted = Encrypt::new(&enc_key).decrypt(&crypted).unwrap();
+        let decrypted = Cipher::new(&enc_key).decrypt(&crypted).unwrap();
 
         println!("{}", decrypted);
 
