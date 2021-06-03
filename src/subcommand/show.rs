@@ -24,12 +24,30 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
-        let crypted = db.get(&self.key)?;
+        // The crypted data returned from database
+        // Will be in this format password:username:url:expires:notes
+        let data = db.get(&self.key)?;
+        let crypted = data.splitn(5, ':');
 
-        let enc_key = master_pwd.to_string();
-        let decrypted = Cipher::new(&enc_key).decrypt(&crypted).unwrap();
+        let cipher = Cipher::new(&master_pwd.to_string());
 
-        println!("{}", decrypted);
+        // let password = crypted.next();
+        // let username = crypted.next();
+        // let url = crypted.next();
+        // let expires = crypted.next();
+        // let notes = crypted.next();
+
+        for c in crypted {
+            match c {
+                "-" => {
+                    println!("Empty");
+                }
+                x => {
+                    let decrypted = cipher.decrypt(x)?;
+                    println!("{}", decrypted);
+                }
+            }
+        }
 
         Ok(())
     }
