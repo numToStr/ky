@@ -23,7 +23,7 @@ impl Config {
 #[derive(Debug, Clone, Clap)]
 pub struct PasswordParams {
     /// Length of the generated password
-    #[clap(short, long, default_value = "20")]
+    #[clap(short, long, default_value = "25")]
     pub length: u64,
 
     /// Characters to exclude from the password
