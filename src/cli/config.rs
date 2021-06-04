@@ -21,8 +21,12 @@ impl Config {
 
 /// Options for the auto generated password
 #[derive(Debug, Clone, Clap)]
-pub struct PwdGenOpts {
+pub struct PasswordParams {
     /// Length of the generated password
     #[clap(short, long, default_value = "20")]
     pub length: u64,
+
+    /// Characters to exclude from the password
+    #[clap(short, long, name = "chars")]
+    pub exclude: Option<String>,
 }

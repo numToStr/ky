@@ -1,5 +1,5 @@
 use crate::{
-    cli::{Config, PwdGenOpts},
+    cli::{Config, PasswordParams},
     lib::{KyError, Password},
     subcommand::Command,
 };
@@ -8,7 +8,7 @@ use clap::Clap;
 #[derive(Debug, Clap)]
 pub struct Generate {
     #[clap(flatten)]
-    pwd_opt: PwdGenOpts,
+    pwd_opt: PasswordParams,
 }
 
 impl Command for Generate {

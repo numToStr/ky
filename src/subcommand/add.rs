@@ -1,5 +1,5 @@
 use crate::{
-    cli::{Config, PwdGenOpts},
+    cli::{Config, PasswordParams},
     lib::{Cipher, Database, KyError, Password, Prompt},
 };
 use clap::Clap;
@@ -12,7 +12,7 @@ pub struct Add {
     key: String,
 
     #[clap(flatten)]
-    pwd_opt: PwdGenOpts,
+    pwd_opt: PasswordParams,
 }
 
 impl Command for Add {

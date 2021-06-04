@@ -1,5 +1,5 @@
 use super::KyError;
-use crate::cli::PwdGenOpts;
+use crate::cli::PasswordParams;
 use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use dialoguer::theme::Theme;
 use rand::{rngs::OsRng, thread_rng, Rng};
@@ -53,13 +53,28 @@ impl Password {
             .is_ok()
     }
 
-    pub fn generate(opts: &PwdGenOpts) -> Self {
+    pub fn generate(opts: &PasswordParams) -> Self {
+        let charset: Vec<u8> = match &opts.exclude {
+            Some(x) => {
+                let exclude_bytes = x.as_bytes();
+
+                CHARSET
+                    .to_vec()
+                    .into_iter()
+                    .filter(|c| !exclude_bytes.contains(c))
+                    .collect()
+            }
+            _ => CHARSET.to_vec(),
+        };
+
         let mut rng = thread_rng();
+
+        let len = charset.len();
 
         let raw: String = (0..opts.length)
             .map(|_| {
-                let idx = rng.gen_range(0..CHARSET.len());
-                CHARSET[idx] as char
+                let idx = rng.gen_range(0..len);
+                charset[idx] as char
             })
             .collect();
 
