@@ -1,5 +1,9 @@
 use clap::{crate_name, Clap};
-use std::path::PathBuf;
+use dirs::home_dir;
+use std::{
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+};
 
 #[derive(Clap, Debug)]
 pub struct Config {
@@ -13,9 +17,20 @@ pub struct Config {
 }
 
 impl Config {
+    fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
+        create_dir_all(&path).ok();
+        path
+    }
+
+    fn ky_home(&self) -> PathBuf {
+        home_dir()
+            .expect("Unable to get the home directory")
+            .join(concat!(".", crate_name!()))
+    }
+
     pub fn db_path(self) -> PathBuf {
-        self.vault_path
-            .unwrap_or_else(|| PathBuf::new().join("lok.db"))
+        self.ensure_create(self.vault_path.clone().unwrap_or_else(|| self.ky_home()))
+            .join(concat!(crate_name!(), ".db"))
     }
 }
 

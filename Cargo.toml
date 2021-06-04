@@ -18,6 +18,7 @@ rand = { version = "0.8.3", features = ["std"] }
 aes-gcm-siv = "0.10.0"
 sha2 = "0.9.5"
 hex = "0.4.3"
+dirs = "3.0.2"
 
 [profile.dev]
 debug = 0
