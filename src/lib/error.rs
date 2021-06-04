@@ -11,8 +11,11 @@ pub enum KyError {
     #[error("Unable to establish database connection")]
     Connection,
 
-    #[error("Value not found for key: `{0}`")]
+    #[error("Key not found in the vault: `{0}`")]
     NotFound(String),
+
+    #[error("Key already exist in the vault: `{0}`")]
+    Exist(String),
 
     #[error("Unable to get the value for `{0}`")]
     Get(String),

@@ -19,7 +19,7 @@ impl Database {
         Ok(Self { conn })
     }
 
-    pub fn exist(&self, key: &'static str) -> Result<bool, KyError> {
+    pub fn exist(&self, key: &str) -> Result<bool, KyError> {
         Ok(self
             .conn
             .get_pinned(key)
