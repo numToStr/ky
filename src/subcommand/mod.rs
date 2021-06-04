@@ -1,13 +1,14 @@
 mod add;
 mod gen;
 mod init;
+mod ls;
 mod remove;
 mod show;
 
 use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
-use self::{add::Add, gen::Generate, init::Init, remove::Remove, show::Show};
+use self::{add::Add, gen::Generate, init::Init, ls::Ls, remove::Remove, show::Show};
 
 pub(self) const MASTER: &str = "master";
 
@@ -31,6 +32,9 @@ pub enum SubCommand {
 
     /// Generate random and cryptographically strong password
     Gen(Generate),
+
+    /// Print a tree view of all keys present in the vault
+    Ls(Ls),
 }
 
 impl SubCommand {
@@ -41,6 +45,7 @@ impl SubCommand {
             Self::Remove(c) => c.exec(config),
             Self::Show(c) => c.exec(config),
             Self::Gen(c) => c.exec(config),
+            Self::Ls(c) => c.exec(config),
         }
     }
 }

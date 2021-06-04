@@ -1,7 +1,6 @@
-use std::path::PathBuf;
-
 use super::KyError;
-use rocksdb::{Options, DB};
+use rocksdb::{IteratorMode, Options, DB};
+use std::path::PathBuf;
 
 pub struct Database {
     conn: DB,
@@ -51,6 +50,18 @@ impl Database {
             .map_err(|_| KyError::Set(key.to_string()))?;
 
         Ok(res)
+    }
+
+    pub fn ls(&self) -> Vec<String> {
+        let mut keys = Vec::new();
+
+        for i in self.conn.iterator(IteratorMode::End) {
+            let key = String::from_utf8(i.0.to_vec()).expect("Invalid key");
+
+            keys.push(key);
+        }
+
+        keys
     }
 
     // pub fn delete(&self, key: &'static str) -> Result<(), KyError> {
