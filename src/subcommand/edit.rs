@@ -1,9 +1,11 @@
 use super::Command;
 use crate::{
-    cli::Config,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    check_decrypt, check_encrypt,
+    cli::{Config, PasswordParams},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
+use dialoguer::console::style;
 
 #[derive(Debug, Clap)]
 pub struct Edit {
@@ -17,6 +19,9 @@ pub struct Edit {
     /// Allow password to be regenerated
     #[clap(short, long)]
     password_gen: bool,
+
+    #[clap(flatten)]
+    pwd_opt: PasswordParams,
 }
 
 impl Command for Edit {
@@ -32,30 +37,43 @@ impl Command for Edit {
             return Err(KyError::MisMatch);
         }
 
-        // let decrypted = db.get(&self.key)?;
+        let encrypted = db.get(&self.key)?;
 
-        let username = Prompt::username_with_default(&theme, "username".to_string())?;
-        let url = Prompt::url_with_default(&theme, "url".to_string())?;
-        let expires = Prompt::expires_with_default(&theme, "expires".to_string())?;
-        let notes = Prompt::notes_with_default(&theme, "notes".to_string())?;
+        println!("  Type '-' to clear the field or Press ENTER to use the current value");
 
-        println!();
-        println!("{}", self.key);
-        // println!("{}", decrypted);
-        println!("{:#?}", username);
-        println!("{:#?}", url);
-        println!("{:#?}", expires);
-        println!("{:#?}", notes);
+        let cipher = Cipher::new(&master_pwd.to_string());
+        let value = Value::from(encrypted.as_str());
+
+        let username_decrypted = check_decrypt!(cipher, &value.keys.username);
+        let username = Prompt::username_with_default(&theme, username_decrypted)?;
+
+        let url_decrypted = check_decrypt!(cipher, &value.keys.url);
+        let url = Prompt::url_with_default(&theme, url_decrypted)?;
+
+        let expires_decrypted = check_decrypt!(cipher, &value.keys.expires);
+        let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
+
+        let notes_decrypted = check_decrypt!(cipher, &value.keys.notes);
+        let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
+
+        let password = if self.password_gen {
+            let p = check_encrypt!(cipher, Some(Password::generate(&self.pwd_opt).to_string()));
+            println!("{}", style("~ New password generated").white().bold());
+            p
+        } else {
+            value.keys.password
+        };
+
+        let new_value = Value::new(Keys {
+            password,
+            username: check_encrypt!(cipher, username),
+            url: check_encrypt!(cipher, url),
+            expires: check_encrypt!(cipher, expires),
+            notes: check_encrypt!(cipher, notes),
+        });
+
+        db.set(&self.key, &new_value.to_string())?;
 
         Ok(())
     }
 }
-
-// Enter master password:
-// Type '-' to clear the field (except Name and Password) or leave blank to use the current value
-// Name [gmail]: -
-// Username [hello]: -
-// Password:
-// URL [fjfj]:
-// Expires [Never]:
-// Notes [] (type < to finish): <

@@ -1,7 +1,7 @@
 use super::Command;
 use crate::{
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, EMPTY, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style, Tabled};
@@ -9,10 +9,12 @@ use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style,
 #[macro_export]
 macro_rules! check_decrypt {
     ($cipher: expr, $encypted: expr) => {{
+        use crate::lib::EMPTY;
+
         if $encypted != EMPTY {
-            $cipher.decrypt($encypted)
+            $cipher.decrypt($encypted)?
         } else {
-            Ok(EMPTY.to_string())
+            EMPTY.to_string()
         }
     }};
 }
@@ -51,11 +53,11 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let decrypted = [
-            Detail("Username", check_decrypt!(cipher, &value.keys.username)?),
-            Detail("Password", check_decrypt!(cipher, &value.keys.password)?),
-            Detail("URL", check_decrypt!(cipher, &value.keys.url)?),
-            Detail("Expires", check_decrypt!(cipher, &value.keys.expires)?),
-            Detail("Notes", check_decrypt!(cipher, &value.keys.notes)?),
+            Detail("Username", check_decrypt!(cipher, &value.keys.username)),
+            Detail("Password", check_decrypt!(cipher, &value.keys.password)),
+            Detail("URL", check_decrypt!(cipher, &value.keys.url)),
+            Detail("Expires", check_decrypt!(cipher, &value.keys.expires)),
+            Detail("Notes", check_decrypt!(cipher, &value.keys.notes)),
         ];
 
         let table = table!(

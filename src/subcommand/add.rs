@@ -1,17 +1,18 @@
 use super::Command;
 use crate::{
     cli::{Config, PasswordParams},
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, EMPTY, MASTER},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 
 #[macro_export]
 macro_rules! check_encrypt {
     ($cipher: expr, $raw: expr) => {{
-        if let Some(x) = $raw {
-            $cipher.encrypt(&x)?
-        } else {
-            EMPTY.to_string()
+        use crate::lib::EMPTY;
+
+        match $raw {
+            Some(x) if x != EMPTY => $cipher.encrypt(&x)?,
+            _ => EMPTY.to_string(),
         }
     }};
 }
