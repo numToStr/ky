@@ -10,8 +10,6 @@ use clap::Subcommand;
 
 use self::{add::Add, gen::Generate, init::Init, ls::Ls, remove::Remove, show::Show};
 
-pub(self) const MASTER: &str = "master";
-
 pub(self) trait Command {
     fn exec(&self, config: Config) -> Result<(), KyError>;
 }

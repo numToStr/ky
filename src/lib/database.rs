@@ -1,4 +1,4 @@
-use super::KyError;
+use super::{KyError, MASTER};
 use rocksdb::{IteratorMode, Options, DB};
 use std::path::PathBuf;
 
@@ -58,7 +58,9 @@ impl Database {
         for i in self.conn.iterator(IteratorMode::End) {
             let key = String::from_utf8(i.0.to_vec()).expect("Invalid key");
 
-            keys.push(key);
+            if key != *MASTER {
+                keys.push(key);
+            }
         }
 
         keys

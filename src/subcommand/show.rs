@@ -1,11 +1,11 @@
 use crate::{
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt},
+    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style, Tabled};
 
-use super::{Command, MASTER};
+use super::Command;
 
 #[derive(Tabled)]
 struct Detail(&'static str, String);

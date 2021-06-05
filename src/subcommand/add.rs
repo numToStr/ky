@@ -1,10 +1,10 @@
 use crate::{
     cli::{Config, PasswordParams},
-    lib::{Cipher, Database, KyError, Password, Prompt},
+    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
-use super::{Command, MASTER};
+use super::Command;
 
 #[derive(Debug, Clap)]
 pub struct Add {

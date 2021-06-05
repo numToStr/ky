@@ -1,7 +1,7 @@
-use super::{Command, MASTER};
+use super::Command;
 use crate::{
     cli::Config,
-    lib::{Database, KyError, Password, Prompt},
+    lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
