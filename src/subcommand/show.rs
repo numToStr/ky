@@ -1,11 +1,21 @@
+use super::Command;
 use crate::{
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, EMPTY, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style, Tabled};
 
-use super::Command;
+#[macro_export]
+macro_rules! check_decrypt {
+    ($cipher: expr, $encypted: expr) => {{
+        if $encypted != EMPTY {
+            $cipher.decrypt($encypted)
+        } else {
+            Ok(EMPTY.to_string())
+        }
+    }};
+}
 
 #[derive(Tabled)]
 struct Detail(&'static str, String);
@@ -30,8 +40,8 @@ impl Command for Show {
 
         // The crypted data returned from database
         // Will be in this format password:username:url:expires:notes
-        let data = db.get(&self.key)?;
-        let mut crypted = data.splitn(5, ':');
+        let crypted = db.get(&self.key)?;
+        let value = Value::from(crypted.as_str());
 
         let cipher = Cipher::new(&master_pwd.to_string());
 
@@ -39,18 +49,13 @@ impl Command for Show {
         // and later use .join() to grab the decrypted value
         // Which will make this decryption way faster
         // I tried and I failed, maybe next time
-        let password = crypted.next();
-        let username = crypted.next();
-        let url = crypted.next();
-        let expires = crypted.next();
-        let notes = crypted.next();
 
         let decrypted = [
-            Detail("Username", check_decrypt(&cipher, username)?),
-            Detail("Password", check_decrypt(&cipher, password)?),
-            Detail("URL", check_decrypt(&cipher, url)?),
-            Detail("Expires", check_decrypt(&cipher, expires)?),
-            Detail("Notes", check_decrypt(&cipher, notes)?),
+            Detail("Username", check_decrypt!(cipher, &value.keys.username)?),
+            Detail("Password", check_decrypt!(cipher, &value.keys.password)?),
+            Detail("URL", check_decrypt!(cipher, &value.keys.url)?),
+            Detail("Expires", check_decrypt!(cipher, &value.keys.expires)?),
+            Detail("Notes", check_decrypt!(cipher, &value.keys.notes)?),
         ];
 
         let table = table!(
@@ -65,13 +70,5 @@ impl Command for Show {
         print!("{}", table);
 
         Ok(())
-    }
-}
-
-#[inline]
-fn check_decrypt(cipher: &Cipher, encypted: Option<&str>) -> Result<String, KyError> {
-    match encypted {
-        Some(x) if x != "-" => cipher.decrypt(encypted.unwrap()),
-        _ => Ok("-".to_string()),
     }
 }

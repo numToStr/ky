@@ -1,10 +1,20 @@
+use super::Command;
 use crate::{
     cli::{Config, PasswordParams},
-    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, EMPTY, MASTER},
 };
 use clap::Clap;
 
-use super::Command;
+#[macro_export]
+macro_rules! check_encrypt {
+    ($cipher: expr, $raw: expr) => {{
+        if let Some(x) = $raw {
+            $cipher.encrypt(&x)?
+        } else {
+            EMPTY.to_string()
+        }
+    }};
+}
 
 #[derive(Debug, Clap)]
 pub struct Add {
@@ -41,25 +51,16 @@ impl Command for Add {
         let cipher = Cipher::new(&enc_key);
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
-        let pwd = cipher.encrypt(&new_pass)?;
 
-        let fields = [username, url, expires, notes];
+        let value = Value::new(Keys {
+            password: cipher.encrypt(&new_pass)?,
+            username: check_encrypt!(cipher, username),
+            url: check_encrypt!(cipher, url),
+            expires: check_encrypt!(cipher, expires),
+            notes: check_encrypt!(cipher, notes),
+        });
 
-        // I know that there can be only 5 data fields
-        let mut enc_data: Vec<String> = Vec::with_capacity(5);
-
-        enc_data.push(pwd);
-
-        for data in fields.iter() {
-            if let Some(d) = data {
-                let enc = cipher.encrypt(&d)?;
-                enc_data.push(enc);
-            } else {
-                enc_data.push("-".to_string());
-            }
-        }
-
-        db.set(&self.key, &enc_data.join(":"))?;
+        db.set(&self.key, &value.to_string())?;
 
         Ok(())
     }

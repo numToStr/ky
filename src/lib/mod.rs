@@ -4,6 +4,7 @@ mod error;
 mod password;
 mod prompt;
 mod tree;
+mod value;
 
 pub use cipher::*;
 pub use database::*;
@@ -11,5 +12,6 @@ pub use error::*;
 pub use password::*;
 pub use prompt::*;
 pub use tree::*;
+pub use value::*;
 
 pub const MASTER: &str = "master";
