@@ -1,4 +1,5 @@
 mod add;
+mod edit;
 mod gen;
 mod init;
 mod ls;
@@ -8,7 +9,7 @@ mod show;
 use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
-use self::{add::Add, gen::Generate, init::Init, ls::Ls, remove::Remove, show::Show};
+use self::{add::Add, edit::Edit, gen::Generate, init::Init, ls::Ls, remove::Remove, show::Show};
 
 pub(self) trait Command {
     fn exec(&self, config: Config) -> Result<(), KyError>;
@@ -33,6 +34,9 @@ pub enum SubCommand {
 
     /// Print a tree view of all keys present in the vault
     Ls(Ls),
+
+    /// Edit a existing key present in the vault
+    Edit(Edit),
 }
 
 impl SubCommand {
@@ -44,6 +48,7 @@ impl SubCommand {
             Self::Show(c) => c.exec(config),
             Self::Gen(c) => c.exec(config),
             Self::Ls(c) => c.exec(config),
+            Self::Edit(c) => c.exec(config),
         }
     }
 }
