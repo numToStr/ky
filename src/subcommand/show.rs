@@ -3,9 +3,7 @@ use crate::{
     lib::{Cipher, Database, KyError, Password, Prompt},
 };
 use clap::Clap;
-use tabled::{
-    table, Alignment, AlignmentObject, ChangeRing, HorizontalAlignment, Row, Style, Tabled,
-};
+use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style, Tabled};
 
 use super::{Command, MASTER};
 
@@ -57,12 +55,14 @@ impl Command for Show {
 
         let table = table!(
             &decrypted,
-            Style::PseudoClean,
-            HorizontalAlignment::new(Alignment::Left, AlignmentObject::Full),
-            ChangeRing(Row(1..), vec![Box::new(|s| format!(" {} ", s))])
+            Disable::Row(..1),
+            Style::pseudo_clean().header(None),
+            HorizontalAlignment(Row(..), Alignment::Left),
+            Format(Row(..), |s| format!(" {} ", s))
         );
 
-        println!("{}", table);
+        // Don't println! because last line of table already contains a line feed
+        print!("{}", table);
 
         Ok(())
     }
