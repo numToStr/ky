@@ -15,7 +15,6 @@ impl<'a> Vault<'a> {
 
         tar.append_dir_all(".", self.src)?;
 
-        // Encrypt the tarred data
         let tarred = tar.into_inner()?;
 
         let mut data = std::io::Cursor::new(tarred);
@@ -30,5 +29,18 @@ impl<'a> Vault<'a> {
         let f = encoder.finish()?;
 
         Ok(f)
+    }
+
+    pub fn restore(&self, dest: &'a Path) -> Result<(), KyError> {
+        let decoder = {
+            let file = File::open(self.src)?;
+            zstd::Decoder::new(file)?
+        };
+
+        let mut tar = tar::Archive::new(decoder);
+
+        tar.unpack(dest)?;
+
+        Ok(())
     }
 }

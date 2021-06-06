@@ -14,6 +14,9 @@ pub enum KyError {
     #[error("Unable to establish database connection")]
     Connection,
 
+    #[error("Vault backup not found on the provided path")]
+    BackupDontExist,
+
     #[error("Entry not found in the vault: `{0}`")]
     NotFound(String),
 

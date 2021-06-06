@@ -5,6 +5,7 @@ mod gen;
 mod init;
 mod ls;
 mod remove;
+mod restore;
 mod show;
 
 use crate::{cli::Config, lib::KyError};
@@ -12,7 +13,7 @@ use clap::Subcommand;
 
 use self::{
     add::Add, backup::Backup, edit::Edit, gen::Generate, init::Init, ls::Ls, remove::Remove,
-    show::Show,
+    restore::Restore, show::Show,
 };
 
 pub(self) trait Command {
@@ -48,8 +49,10 @@ pub enum SubCommand {
     Edit(Edit),
 
     /// Backup the vault
-    #[clap(visible_alias = "bkp")]
     Backup(Backup),
+
+    /// Restore the vault
+    Restore(Restore),
 }
 
 impl SubCommand {
@@ -63,6 +66,7 @@ impl SubCommand {
             Self::List(c) => c.exec(config),
             Self::Edit(c) => c.exec(config),
             Self::Backup(c) => c.exec(config),
+            Self::Restore(c) => c.exec(config),
         }
     }
 }

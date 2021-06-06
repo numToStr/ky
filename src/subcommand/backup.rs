@@ -40,7 +40,7 @@ impl Command for Backup {
         // ignore flag is set
         // vault backup is already exists
         // then ask to proceed
-        if !self.ignore && backup_path.exists() && !Prompt::db_exists(&theme)? {
+        if !self.ignore && backup_path.exists() && !Prompt::backup_exist(&theme)? {
             return Ok(());
         }
 

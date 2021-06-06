@@ -70,7 +70,11 @@ impl Prompt {
         Self::confirm("Are you sure you want to proceed?", theme)
     }
 
-    pub fn db_exists(theme: &impl Theme) -> io::Result<bool> {
+    pub fn backup_exist(theme: &impl Theme) -> io::Result<bool> {
+        Self::confirm("Backup already exists. Do you want to proceed?", theme)
+    }
+
+    pub fn vault_exist(theme: &impl Theme) -> io::Result<bool> {
         Self::confirm("Vault already exists. Do you want to proceed?", theme)
     }
 
