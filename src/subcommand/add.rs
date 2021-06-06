@@ -30,10 +30,6 @@ impl Command for Add {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         let db = Database::new(config.db_path())?;
 
-        if db.exist(&self.key)? {
-            return Err(KyError::Exist(self.key.to_string()));
-        }
-
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
@@ -41,6 +37,10 @@ impl Command for Add {
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
+        }
+
+        if db.exist(&self.key)? {
+            return Err(KyError::Exist(self.key.to_string()));
         }
 
         let username = Prompt::username(&theme)?;
