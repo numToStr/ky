@@ -32,7 +32,7 @@ impl Command for Remove {
         if Prompt::proceed(&theme)? {
             db.delete(&self.key)?;
             println!();
-            println!("Entry deleted successfully: {}", style(&self.key).bold());
+            println!("Entry successfully deleted: {}", style(&self.key).bold());
         }
 
         Ok(())

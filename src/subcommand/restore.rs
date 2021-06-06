@@ -45,7 +45,7 @@ impl Command for Restore {
 
         Vault::new(&backup_path).restore(&db_path)?;
 
-        println!("Restore successful");
+        println!("Vault successfully restored");
 
         Ok(())
     }
