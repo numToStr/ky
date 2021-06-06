@@ -57,7 +57,7 @@ impl Command for Edit {
         let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
 
         let password = if self.password_gen {
-            let p = check_encrypt!(cipher, Some(Password::generate(&self.pwd_opt).to_string()));
+            let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
             println!("{}", style("~ New password generated").white().bold());
             p
         } else {
