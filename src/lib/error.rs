@@ -8,26 +8,26 @@ pub enum KyError {
     Any(String),
 
     // #startregion: Errors related to database
-    #[error("Unable to establish database connection")]
-    Connection,
-
-    #[error("Key not found in the vault: `{0}`")]
-    NotFound(String),
-
-    #[error("Key already exist in the vault: `{0}`")]
-    Exist(String),
-
-    #[error("Unable to get the value for `{0}`")]
-    Get(String),
-
-    #[error("Unable to set the value for `{0}`")]
-    Set(String),
-
     #[error("Vault already initialized")]
     Initialized,
 
-    // #[error("Unable to delete the value for `{0}`")]
-    // Delete(&'static str),
+    #[error("Unable to establish database connection")]
+    Connection,
+
+    #[error("Entry not found in the vault: `{0}`")]
+    NotFound(String),
+
+    #[error("Entry already exist in the vault: `{0}`")]
+    Exist(String),
+
+    #[error("Unable to get the entry: `{0}`")]
+    Get(String),
+
+    #[error("Unable to set the entry: `{0}`")]
+    Set(String),
+
+    #[error("Unable to delete the entry: `{0}`")]
+    Delete(String),
     // #endregion
     #[error("Unable to hash the password")]
     Hashing,

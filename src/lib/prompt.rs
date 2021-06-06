@@ -2,7 +2,7 @@ use super::KyError;
 use dialoguer::{
     console::{style, Style},
     theme::{ColorfulTheme, Theme},
-    Input,
+    Confirm, Input,
 };
 
 type PromptReturn = Result<Option<String>, KyError>;
@@ -48,6 +48,14 @@ impl Prompt {
         };
 
         Ok(new_input)
+    }
+
+    pub fn confirm(theme: &impl Theme) -> std::io::Result<bool> {
+        Confirm::with_theme(theme)
+            .with_prompt("Are you sure you want to proceed?")
+            .default(false)
+            .wait_for_newline(true)
+            .interact()
     }
 
     pub fn username(theme: &impl Theme) -> PromptReturn {

@@ -66,9 +66,12 @@ impl Database {
         keys
     }
 
-    // pub fn delete(&self, key: &'static str) -> Result<(), KyError> {
-    //     let res = self.conn.delete(key).map_err(|_| KyError::Delete(key))?;
-    //
-    //     Ok(res)
-    // }
+    pub fn delete(&self, key: &str) -> Result<(), KyError> {
+        let res = self
+            .conn
+            .delete(key)
+            .map_err(|_| KyError::Delete(key.to_string()))?;
+
+        Ok(res)
+    }
 }
