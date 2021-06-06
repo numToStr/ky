@@ -3,6 +3,7 @@ use std::fs::remove_dir_all;
 use clap::Clap;
 
 use crate::{
+    check_db,
     cli::Config,
     lib::{Database, KyError, Password, Prompt, MASTER},
 };
@@ -14,10 +15,14 @@ pub struct Nuke;
 
 impl Command for Nuke {
     fn exec(&self, config: Config) -> Result<(), KyError> {
+        let db_path = config.db_path();
+
+        check_db!(db_path);
+
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::new(&config.db_path())?;
+        let db = Database::open(&db_path)?;
 
         let hashed = db.get(MASTER)?;
 
@@ -25,9 +30,7 @@ impl Command for Nuke {
             return Err(KyError::MisMatch);
         }
 
-        let db_path = config.db_path();
-
-        if db_path.exists() && Prompt::proceed(&theme)? {
+        if Prompt::proceed(&theme)? {
             remove_dir_all(db_path)?;
         }
 

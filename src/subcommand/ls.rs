@@ -1,4 +1,5 @@
 use crate::{
+    check_db,
     cli::Config,
     lib::{Database, KyError, Password, Prompt, MASTER},
 };
@@ -11,9 +12,13 @@ pub struct Ls;
 
 impl Command for Ls {
     fn exec(&self, config: Config) -> Result<(), KyError> {
+        let db_path = config.db_path();
+
+        check_db!(db_path);
+
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::new(&config.db_path())?;
+        let db = Database::open(&db_path)?;
 
         let hashed = db.get(MASTER)?;
 

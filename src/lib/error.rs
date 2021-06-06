@@ -1,15 +1,19 @@
+use clap::crate_name;
 use std::io;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum KyError {
     // Generic and Unknown error, that I don't want to handle
-    #[error("Something went wrong: `{0}")]
+    #[error("Something went wrong! {0}")]
     Any(String),
 
     // #startregion: Errors related to database
-    #[error("Vault already initialized")]
-    Initialized,
+    #[error("Vault is already initialized")]
+    Init,
+
+    #[error("Vault is not initialized. Please run `{} init` to initialize the vault", crate_name!())]
+    NoInit,
 
     #[error("Unable to establish database connection")]
     Connection,

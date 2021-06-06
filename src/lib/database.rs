@@ -2,16 +2,40 @@ use super::{KyError, MASTER};
 use rocksdb::{IteratorMode, Options, DB};
 use std::path::Path;
 
+/// Just a check to ensure that the database exist before connecting
+#[macro_export]
+macro_rules! check_db {
+    ($path: expr) => {
+        if !$path.exists() {
+            return Err(crate::lib::KyError::NoInit);
+        }
+    };
+}
+
 pub struct Database {
     conn: DB,
 }
 
 impl Database {
-    pub fn new(path: &Path) -> Result<Self, KyError> {
+    fn options() -> Options {
         let mut opts = Options::default();
-        opts.create_if_missing(true);
         opts.set_keep_log_file_num(1);
         opts.set_skip_checking_sst_file_sizes_on_db_open(true);
+
+        opts
+    }
+
+    pub fn init(path: &Path) -> Result<Self, KyError> {
+        let mut opts = Self::options();
+        opts.create_if_missing(true);
+
+        let conn = DB::open(&opts, path).map_err(|_| KyError::Connection)?;
+
+        Ok(Self { conn })
+    }
+
+    pub fn open(path: &Path) -> Result<Self, KyError> {
+        let opts = Self::options();
 
         let conn = DB::open(&opts, path).map_err(|_| KyError::Connection)?;
 

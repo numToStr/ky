@@ -10,11 +10,13 @@ pub struct Init;
 
 impl Command for Init {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let db = Database::new(&config.db_path())?;
+        let db_path = config.db_path();
 
-        if db.exist(MASTER)? {
-            return Err(KyError::Initialized);
+        if db_path.exists() {
+            return Err(KyError::Init);
         }
+
+        let db = Database::init(&db_path)?;
 
         let password = Password::init(&Prompt::theme())?;
 

@@ -1,5 +1,6 @@
 use super::Command;
 use crate::{
+    check_db,
     cli::Config,
     lib::{Database, KyError, Password, Prompt, Vault, MASTER},
 };
@@ -20,11 +21,14 @@ pub struct Backup {
 
 impl Command for Backup {
     fn exec(&self, config: Config) -> Result<(), KyError> {
+        let db_path = config.db_path();
+
+        check_db!(db_path);
+
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db_path = config.db_path();
-        let db = Database::new(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let hashed = db.get(MASTER)?;
 
