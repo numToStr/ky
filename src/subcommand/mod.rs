@@ -29,7 +29,7 @@ pub enum SubCommand {
     #[clap(visible_alias = "rm")]
     Remove(Remove),
 
-    /// Show details of the entry
+    /// Show details of an entry
     Show(Show),
 
     /// Generate random and cryptographically strong password
@@ -39,7 +39,7 @@ pub enum SubCommand {
     #[clap(visible_alias = "ls")]
     List(Ls),
 
-    /// Edit a existing key present in the vault
+    /// Edit a existing entry present in the vault
     #[clap(visible_alias = "e")]
     Edit(Edit),
 }

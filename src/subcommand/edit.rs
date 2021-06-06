@@ -9,10 +9,10 @@ use dialoguer::console::style;
 
 #[derive(Debug, Clap)]
 pub struct Edit {
-    /// Key which needs to be edited
+    /// Entry which needs to be edited
     key: String,
 
-    /// Allow key to be edited
+    /// Allow key of the entry to be edited
     #[clap(short, long)]
     key_edit: bool,
 

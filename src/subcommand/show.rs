@@ -24,7 +24,7 @@ struct Detail(&'static str, String);
 
 #[derive(Debug, Clap)]
 pub struct Show {
-    /// Unique key for the entry
+    /// Entry which need to be shown
     key: String,
 }
 

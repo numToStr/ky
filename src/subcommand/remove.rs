@@ -8,7 +8,7 @@ use dialoguer::console::style;
 
 #[derive(Debug, Clap)]
 pub struct Remove {
-    /// Key needs to be deleted
+    /// Entry which needs to be deleted
     key: String,
 }
 
