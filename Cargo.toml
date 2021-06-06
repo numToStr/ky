@@ -2,7 +2,7 @@
 name = "ky"
 description = "Simple password manager written in rust"
 version = "0.0.1"
-authors = ["numtostr <vikasraj1911@gmail.com>"]
+authors = ["Vikas Raj <sudo@vikasraj.dev>"]
 edition = "2018"
 license = "MIT"
 
