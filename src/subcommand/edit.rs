@@ -12,10 +12,9 @@ pub struct Edit {
     /// Entry which needs to be edited
     key: String,
 
-    /// Allow key of the entry to be edited
-    #[clap(short, long)]
-    key_edit: bool,
-
+    // /// Allow key of the entry to be edited
+    // #[clap(short, long)]
+    // key_edit: bool,
     /// Allow password to be regenerated
     #[clap(short, long)]
     password_gen: bool,
@@ -58,7 +57,7 @@ impl Command for Edit {
 
         let password = if self.password_gen {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
-            println!("{}", style("~ New password generated").white().bold());
+            println!("{}", style("~ New password generated").bold());
             p
         } else {
             value.keys.password

@@ -15,7 +15,7 @@ impl Prompt {
 
         ColorfulTheme {
             prompt_prefix: style(p.to_string()).for_stderr().black().bright().bold(),
-            success_prefix: style(p.to_string()).for_stderr().white().bold(),
+            success_prefix: style(p.to_string()).for_stderr().bold(),
             error_prefix: style(p.to_string()).for_stderr().red(),
             values_style: Style::new().for_stderr().yellow(),
             ..ColorfulTheme::default()
