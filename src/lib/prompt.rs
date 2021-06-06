@@ -4,6 +4,7 @@ use dialoguer::{
     theme::{ColorfulTheme, Theme},
     Confirm, Input,
 };
+use std::io;
 
 pub const PREFIX: char = '~';
 
@@ -41,6 +42,7 @@ impl Prompt {
 
         Ok(new_input)
     }
+
     fn prompt(title: &str, theme: &impl Theme) -> PromptReturn {
         let input: String = Input::with_theme(theme)
             .with_prompt(title)
@@ -55,12 +57,21 @@ impl Prompt {
         Ok(new_input)
     }
 
-    pub fn confirm(theme: &impl Theme) -> std::io::Result<bool> {
+    #[inline]
+    pub fn confirm(title: &str, theme: &impl Theme) -> io::Result<bool> {
         Confirm::with_theme(theme)
-            .with_prompt("Are you sure you want to proceed?")
+            .with_prompt(title)
             .default(false)
             .wait_for_newline(true)
             .interact()
+    }
+
+    pub fn proceed(theme: &impl Theme) -> io::Result<bool> {
+        Self::confirm("Are you sure you want to proceed?", theme)
+    }
+
+    pub fn db_exists(theme: &impl Theme) -> io::Result<bool> {
+        Self::confirm("Vault already exists. Do you want to proceed?", theme)
     }
 
     pub fn username(theme: &impl Theme) -> PromptReturn {

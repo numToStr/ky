@@ -29,7 +29,7 @@ impl Command for Remove {
             return Err(KyError::NotFound(self.key.to_string()));
         }
 
-        if Prompt::confirm(&theme)? {
+        if Prompt::proceed(&theme)? {
             db.delete(&self.key)?;
             println!();
             println!("Entry deleted successfully: {}", style(&self.key).bold());

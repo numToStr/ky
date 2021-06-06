@@ -37,12 +37,16 @@ impl Command for Backup {
             _ => config.backup_path(),
         };
 
+        // ignore flag is set
+        // vault backup is already exists
+        // then ask to proceed
+        if !self.ignore && backup_path.exists() && !Prompt::db_exists(&theme)? {
+            return Ok(());
+        }
+
         Vault::new(&db_path).backup(&backup_path)?;
 
-        println!(
-            "Backup successful at {}",
-            style(backup_path.display()).bold()
-        );
+        println!("Backup successful: {}", style(backup_path.display()).bold());
 
         Ok(())
     }
