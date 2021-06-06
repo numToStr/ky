@@ -28,10 +28,10 @@ pub struct Add {
 
 impl Command for Add {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let db = Database::new(config.db_path())?;
-
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
+
+        let db = Database::new(&config.db_path())?;
 
         let hashed = db.get(MASTER)?;
 

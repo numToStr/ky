@@ -7,7 +7,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(path: PathBuf) -> Result<Self, KyError> {
+    pub fn new(path: &PathBuf) -> Result<Self, KyError> {
         let mut opts = Options::default();
         opts.create_if_missing(true);
         opts.set_keep_log_file_num(1);

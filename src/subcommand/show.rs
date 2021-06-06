@@ -32,7 +32,7 @@ impl Command for Show {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::new(config.db_path())?;
+        let db = Database::new(&config.db_path())?;
 
         let hashed = db.get(MASTER)?;
 

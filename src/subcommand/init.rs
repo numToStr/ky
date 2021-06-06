@@ -10,7 +10,7 @@ pub struct Init;
 
 impl Command for Init {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let db = Database::new(config.db_path())?;
+        let db = Database::new(&config.db_path())?;
 
         if db.exist(MASTER)? {
             return Err(KyError::Initialized);
