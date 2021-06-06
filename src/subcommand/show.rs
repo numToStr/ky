@@ -27,6 +27,10 @@ struct Detail(&'static str, String);
 pub struct Show {
     /// Entry which need to be shown
     key: String,
+
+    /// Show password in clear text
+    #[clap(short, long)]
+    clear: bool,
 }
 
 impl Command for Show {
@@ -59,7 +63,14 @@ impl Command for Show {
 
         let decrypted = [
             Detail("Username", check_decrypt!(cipher, &value.keys.username)),
-            Detail("Password", check_decrypt!(cipher, &value.keys.password)),
+            Detail(
+                "Password",
+                if self.clear {
+                    check_decrypt!(cipher, &value.keys.password)
+                } else {
+                    "*".repeat(15)
+                },
+            ),
             Detail("URL", check_decrypt!(cipher, &value.keys.url)),
             Detail("Expires", check_decrypt!(cipher, &value.keys.expires)),
             Detail("Notes", check_decrypt!(cipher, &value.keys.notes)),
