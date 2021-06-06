@@ -4,6 +4,7 @@ mod edit;
 mod gen;
 mod init;
 mod ls;
+mod nuke;
 mod remove;
 mod restore;
 mod show;
@@ -12,8 +13,8 @@ use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
 use self::{
-    add::Add, backup::Backup, edit::Edit, gen::Generate, init::Init, ls::Ls, remove::Remove,
-    restore::Restore, show::Show,
+    add::Add, backup::Backup, edit::Edit, gen::Generate, init::Init, ls::Ls, nuke::Nuke,
+    remove::Remove, restore::Restore, show::Show,
 };
 
 pub(self) trait Command {
@@ -51,8 +52,13 @@ pub enum SubCommand {
     /// Backup the vault
     Backup(Backup),
 
-    /// Restore the vault
+    /// Restore the vault backup
     Restore(Restore),
+
+    /// Permanently remove the vault
+    ///
+    /// CAUTION: Please backup before doing this, otherwise you will loose all of your data.
+    Nuke(Nuke),
 }
 
 impl SubCommand {
@@ -67,6 +73,7 @@ impl SubCommand {
             Self::Edit(c) => c.exec(config),
             Self::Backup(c) => c.exec(config),
             Self::Restore(c) => c.exec(config),
+            Self::Nuke(c) => c.exec(config),
         }
     }
 }
