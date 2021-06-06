@@ -1,4 +1,5 @@
 mod add;
+mod backup;
 mod edit;
 mod gen;
 mod init;
@@ -9,7 +10,10 @@ mod show;
 use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
-use self::{add::Add, edit::Edit, gen::Generate, init::Init, ls::Ls, remove::Remove, show::Show};
+use self::{
+    add::Add, backup::Backup, edit::Edit, gen::Generate, init::Init, ls::Ls, remove::Remove,
+    show::Show,
+};
 
 pub(self) trait Command {
     fn exec(&self, config: Config) -> Result<(), KyError>;
@@ -42,6 +46,10 @@ pub enum SubCommand {
     /// Edit a existing entry present in the vault
     #[clap(visible_alias = "e")]
     Edit(Edit),
+
+    /// Backup the vault
+    #[clap(visible_alias = "bkp")]
+    Backup(Backup),
 }
 
 impl SubCommand {
@@ -54,6 +62,7 @@ impl SubCommand {
             Self::Gen(c) => c.exec(config),
             Self::List(c) => c.exec(config),
             Self::Edit(c) => c.exec(config),
+            Self::Backup(c) => c.exec(config),
         }
     }
 }
