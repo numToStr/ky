@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -38,7 +38,11 @@ impl Command for Edit {
 
         let encrypted = db.get(&self.key)?;
 
-        println!("  Type '-' to clear the field or Press ENTER to use the current value");
+        println!();
+        println!(
+            "  {}",
+            style("Type '-' to clear the field or Press ENTER to use the current value").dim()
+        );
 
         let cipher = Cipher::new(&master_pwd.to_string());
         let value = Value::from(encrypted.as_str());
@@ -57,7 +61,7 @@ impl Command for Edit {
 
         let password = if self.password_gen {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
-            println!("{}", style("~ New password generated").bold());
+            println!("{} Password regenerated", style(PREFIX).bold());
             p
         } else {
             value.keys.password

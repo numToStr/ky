@@ -5,19 +5,24 @@ use dialoguer::{
     Confirm, Input,
 };
 
+pub const PREFIX: char = '~';
+
 type PromptReturn = Result<Option<String>, KyError>;
 
 pub struct Prompt;
 
 impl Prompt {
     pub fn theme() -> ColorfulTheme {
-        let p = '~';
-
         ColorfulTheme {
-            prompt_prefix: style(p.to_string()).for_stderr().black().bright().bold(),
-            success_prefix: style(p.to_string()).for_stderr().bold(),
-            error_prefix: style(p.to_string()).for_stderr().red(),
+            prompt_prefix: style(PREFIX.to_string())
+                .for_stderr()
+                .black()
+                .bright()
+                .bold(),
+            success_prefix: style(PREFIX.to_string()).for_stderr().bold(),
+            error_prefix: style(PREFIX.to_string()).for_stderr().red(),
             values_style: Style::new().for_stderr().yellow(),
+            prompt_style: Style::new().for_stderr(),
             ..ColorfulTheme::default()
         }
     }
