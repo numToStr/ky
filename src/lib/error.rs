@@ -47,6 +47,17 @@ pub enum KyError {
 
     #[error("Unable to encrypt the provided data")]
     Encrypt,
+
+    #[error("Unable to spawn `git`. Make sure you have git installed!")]
+    Git,
+
+    #[error("Git repository is not set. Make sure have added `KY_GIT_REPO` environment variable!")]
+    GitRepo,
+
+    #[error(
+        "Git default branch is not set. Make sure have added `KY_GIT_BRANCH` environment variable!"
+    )]
+    GitBranch,
 }
 
 impl From<io::Error> for KyError {

@@ -17,7 +17,11 @@ pub struct Config {
 
     /// Git repo used for backup storage (Hidden)
     #[clap(long, name = "repo", env = "KY_GIT_REPO", hide_env_values = true)]
-    git_repo: Option<PathBuf>,
+    pub git_repo: Option<String>,
+
+    /// Default branch for the git repo (Hidden)
+    #[clap(long, name = "branch", env = "KY_GIT_BRANCH", hide_env_values = true)]
+    pub git_branch: Option<String>,
 }
 
 impl Config {

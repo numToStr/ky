@@ -23,7 +23,7 @@ pub(self) trait Command {
 
 #[derive(Debug, Subcommand)]
 pub enum SubCommand {
-    /// Initialize the vault
+    /// Initialize the vault with a master password
     #[clap(visible_alias = "i")]
     Init(Init),
 
