@@ -5,8 +5,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-const UPSTREAM: &str = "upstream";
-
 pub struct Git<'a> {
     repo: &'a str,
     branch: &'a str,
@@ -31,17 +29,6 @@ impl<'a> Git<'a> {
         let init_status = self.git().args(&["init", &self.target]).spawn()?.wait()?;
 
         if !init_status.success() {
-            return Err(KyError::Git);
-        }
-
-        let remote_status = self
-            .git()
-            .args(&["-C", &self.target])
-            .args(&["remote", "add", UPSTREAM, self.repo])
-            .spawn()?
-            .wait()?;
-
-        if !remote_status.success() {
             return Err(KyError::Git);
         }
 
@@ -91,7 +78,7 @@ impl<'a> Git<'a> {
     pub fn push(self) -> Result<Self, KyError> {
         let status = self
             .git()
-            .args(&["-C", &self.target, "push", UPSTREAM, &self.branch])
+            .args(&["-C", &self.target, "push", &self.repo, &self.branch])
             .spawn()?
             .wait()?;
 
