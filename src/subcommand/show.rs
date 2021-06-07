@@ -5,7 +5,7 @@ use crate::{
     lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
-use tabled::{table, Alignment, Disable, Format, HorizontalAlignment, Row, Style, Tabled};
+use tabled::{table, Alignment, Disable, Format, Full, Row, Style, Tabled};
 
 #[macro_export]
 macro_rules! check_decrypt {
@@ -80,7 +80,7 @@ impl Command for Show {
             &decrypted,
             Disable::Row(..1),
             Style::pseudo_clean().header(None),
-            HorizontalAlignment(Row(..), Alignment::Left),
+            Alignment::left(Full),
             Format(Row(..), |s| format!(" {} ", s))
         );
 

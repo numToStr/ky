@@ -99,8 +99,6 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    // TODO: use this in `ky-backup`
-    #[allow(dead_code)]
     pub fn push(self) -> Result<Self, KyError> {
         let status = self
             .git()
