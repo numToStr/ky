@@ -1,12 +1,21 @@
-use clap::Clap;
-
+use super::Command;
 use crate::{
-    check_db, check_git_details,
+    check_db,
     cli::Config,
     lib::{Git, KyError},
 };
+use clap::Clap;
 
-use super::Command;
+#[macro_use]
+macro_rules! check_git_details {
+    ($repo: expr, $branch: expr) => {{
+        match ($repo, $branch) {
+            (Some(repo), Some(branch)) => Ok((repo, branch)),
+            (None, _) => Err(KyError::GitRepo),
+            (_, None) => Err(KyError::GitBranch),
+        }
+    }};
+}
 
 #[derive(Debug, Clap)]
 pub enum GitCmd {

@@ -5,17 +5,6 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-#[macro_export]
-macro_rules! check_git_details {
-    ($repo: expr, $branch: expr) => {{
-        match ($repo, $branch) {
-            (Some(repo), Some(branch)) => Ok((repo, branch)),
-            (None, _) => Err(crate::lib::KyError::GitRepo),
-            (_, None) => Err(crate::lib::KyError::GitBranch),
-        }
-    }};
-}
-
 const UPSTREAM: &str = "upstream";
 
 pub struct Git<'a> {
