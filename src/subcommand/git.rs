@@ -46,7 +46,11 @@ impl Command for GitInit {
 
         let (repo, branch) = check_git_details!(config.git_repo, config.git_branch)?;
 
-        Git::new(&repo, &branch, &db_path).init()?.add()?.commit()?;
+        Git::new(&repo, &branch, &db_path)
+            .init()?
+            .add()?
+            .commit()?
+            .push()?;
 
         Ok(())
     }
