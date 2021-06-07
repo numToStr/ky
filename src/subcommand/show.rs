@@ -29,7 +29,7 @@ pub struct Show {
     key: String,
 
     /// Show password in clear text
-    #[clap(short, long)]
+    #[clap(short = 'C', long)]
     clear: bool,
 }
 
