@@ -33,12 +33,17 @@ impl Config {
     }
 
     pub fn backup_path(&self) -> PathBuf {
-        self.ky_home().join(concat!(crate_name!(), ".backup"))
+        self.ensure_create(self.ky_home().join("backup"))
+            .join(concat!(crate_name!(), ".backup"))
     }
 
     pub fn db_path(&self) -> PathBuf {
-        self.ensure_create(self.vault_path.clone().unwrap_or_else(|| self.ky_home()))
-            .join(concat!(crate_name!(), ".db"))
+        self.ensure_create(
+            self.vault_path
+                .clone()
+                .unwrap_or_else(|| self.ky_home().join("vault")),
+        )
+        .join(concat!(crate_name!(), ".db"))
     }
 }
 
