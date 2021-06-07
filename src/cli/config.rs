@@ -13,7 +13,11 @@ pub struct Config {
 
     /// Prompt used inside the session
     #[clap(long, env = "KY_PROMPT", default_value = concat!(crate_name!(), " $"))]
-    prompt: PathBuf,
+    prompt: String,
+
+    /// Git repo used for backup storage (Hidden)
+    #[clap(long, name = "repo", env = "KY_GIT_REPO", hide_env_values = true)]
+    git_repo: Option<PathBuf>,
 }
 
 impl Config {
