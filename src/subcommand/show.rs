@@ -5,7 +5,7 @@ use crate::{
     lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
-use tabled::{table, Alignment, Disable, Format, Full, Row, Style, Tabled};
+use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
 
 #[macro_export]
 macro_rules! check_decrypt {
@@ -81,7 +81,7 @@ impl Command for Show {
             Disable::Row(..1),
             Style::pseudo_clean().header(None),
             Alignment::left(Full),
-            Format(Row(..), |s| format!(" {} ", s))
+            Indent::new(Row(..), 1, 1, 0, 0)
         );
 
         // Don't println! because last line of table already contains a line feed
