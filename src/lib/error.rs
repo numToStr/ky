@@ -51,6 +51,9 @@ pub enum KyError {
     #[error("Unable to spawn `git`. Make sure you have git installed!")]
     Git,
 
+    #[error("Git is already initialized!")]
+    GitInit,
+
     #[error("Git repository is not set. Make sure have added `KY_GIT_REPO` environment variable!")]
     GitRepo,
 
