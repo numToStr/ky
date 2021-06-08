@@ -54,7 +54,7 @@ impl Command for Add {
         let notes = Prompt::notes(&theme)?;
 
         let enc_key = master_pwd.to_string();
-        let cipher = Cipher::new(&enc_key);
+        let cipher = Cipher::new(&enc_key, &self.key);
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 

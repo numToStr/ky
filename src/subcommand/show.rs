@@ -54,7 +54,7 @@ impl Command for Show {
         let crypted = db.get(&self.key)?;
         let value = Value::from(crypted.as_str());
 
-        let cipher = Cipher::new(&master_pwd.to_string());
+        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value

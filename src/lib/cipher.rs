@@ -11,17 +11,24 @@ pub struct Cipher {
 }
 
 impl Cipher {
-    pub fn new(key: &str) -> Self {
-        let key_sha = Self::get_sha(key);
-        let key = Key::from_slice(&key_sha);
-        let cipher = Aes256GcmSiv::new(key);
+    pub fn new(master: &str, key: &str) -> Self {
+        let master_sha = Self::get_sha(master);
+        let master_key = Key::from_slice(&master_sha);
+        let cipher = Aes256GcmSiv::new(master_key);
 
-        let nonce_secret: Vec<u8> = key_sha.into_iter().take(12).collect();
+        let iter_count = 6;
+        let nonce_secret: Vec<u8> = Self::get_sha(key)
+            .into_iter()
+            .take(iter_count)
+            .chain(master_key.into_iter().copied().take(iter_count))
+            .collect();
+
         let nonce = Nonce::from_slice(&nonce_secret).to_owned();
 
         Self { cipher, nonce }
     }
 
+    #[inline]
     fn get_sha(key: &str) -> Output<Sha256> {
         Sha256::digest(key.as_bytes())
     }

@@ -48,7 +48,7 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::new(&master_pwd.to_string());
+        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
         let value = Value::from(encrypted.as_str());
 
         let username_decrypted = check_decrypt!(cipher, &value.keys.username);
