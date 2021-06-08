@@ -9,16 +9,16 @@ pub enum KyError {
     Any(String),
 
     // #startregion: Errors related to database
-    #[error("Vault is already initialized")]
+    #[error("Vault is already initialized!")]
     Init,
 
-    #[error("Vault is not initialized. Please run `{} init` to initialize the vault", crate_name!())]
+    #[error("Vault is not initialized. Please run `{} init` to initialize the vault!", crate_name!())]
     NoInit,
 
-    #[error("Unable to establish database connection")]
+    #[error("Unable to establish database connection!")]
     Connection,
 
-    #[error("Vault backup not found on the provided path")]
+    #[error("Vault backup not found on the provided path!")]
     BackupDontExist,
 
     #[error("Entry not found in the vault: `{0}`")]
@@ -36,16 +36,16 @@ pub enum KyError {
     #[error("Unable to delete the entry: `{0}`")]
     Delete(String),
     // #endregion
-    #[error("Unable to hash the password")]
+    #[error("Unable to hash the password!")]
     Hashing,
 
-    #[error("Password mismatch")]
+    #[error("Password mismatch!")]
     MisMatch,
 
-    #[error("Unable to decrypt the provided data")]
+    #[error("Unable to decrypt the provided data!")]
     Decrypt,
 
-    #[error("Unable to encrypt the provided data")]
+    #[error("Unable to encrypt the provided data!")]
     Encrypt,
 
     #[error("Unable to spawn `git`. Make sure you have git installed!")]
@@ -53,6 +53,9 @@ pub enum KyError {
 
     #[error("Git is already initialized!")]
     GitInit,
+
+    #[error("Git is not initialized. Please run `{} git init` to initialize a git repo!", crate_name!())]
+    GitNoInit,
 
     #[error("Git repository is not set. Make sure have added `KY_GIT_REPO` environment variable!")]
     GitRepo,

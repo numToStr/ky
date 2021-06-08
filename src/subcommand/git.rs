@@ -69,6 +69,10 @@ impl Command for GitPush {
 
         check_db!(db_path);
 
+        if !db_path.join(".git").exists() {
+            return Err(KyError::GitNoInit);
+        }
+
         let (repo, branch) = check_git_details!(config.git_repo, config.git_branch)?;
 
         Git::new(&repo, &branch, &db_path).add()?.commit()?.push()?;
