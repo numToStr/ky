@@ -24,6 +24,7 @@ dirs = "3.0.2"
 tabled = "0.1.4"
 tar = "0.4.35"
 zstd = "0.8.3"
+qrcodegen = "1.6.0"
 
 [profile.dev]
 debug = 0

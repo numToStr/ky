@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -31,6 +31,14 @@ pub struct Show {
     /// Show password in clear text
     #[clap(short = 'C', long)]
     clear: bool,
+
+    /// Show password in a form of qr code
+    #[clap(short, long)]
+    qr_code: bool,
+
+    /// Don't print the details, can be used with qr code
+    #[clap(short, long, conflicts_with = "clear")]
+    mute: bool,
 }
 
 impl Command for Show {
@@ -61,12 +69,28 @@ impl Command for Show {
         // Which will make this decryption way faster
         // I tried and I failed, maybe next time
 
+        let password = if self.clear || self.qr_code {
+            Some(check_decrypt!(cipher, &value.keys.password))
+        } else {
+            None
+        };
+
+        if let (true, Some(p)) = (self.qr_code, &password) {
+            let code = Qr::new(&p).render();
+            print!("{}", code);
+        }
+
+        // If the output is muted then no need to print the table
+        if self.mute {
+            return Ok(());
+        }
+
         let decrypted = [
             Detail("Username", check_decrypt!(cipher, &value.keys.username)),
             Detail(
                 "Password",
-                if self.clear {
-                    check_decrypt!(cipher, &value.keys.password)
+                if let (true, Some(p)) = (self.clear, password) {
+                    p
                 } else {
                     "*".repeat(15)
                 },

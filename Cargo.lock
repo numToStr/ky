@@ -375,6 +375,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "hex",
+ "qrcodegen",
  "rand",
  "rocksdb",
  "sha2",
@@ -528,6 +529,12 @@ checksum = "f0d8caf72986c1a598726adc988bb5984792ef84f5ee5aa50209145ee8077038"
 dependencies = [
  "unicode-xid",
 ]
+
+[[package]]
+name = "qrcodegen"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d24ea38b2345f15533e6668104bec0136883404287e095f15f9ea2522e2b4b6c"
 
 [[package]]
 name = "quote"
