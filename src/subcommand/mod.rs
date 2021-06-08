@@ -82,3 +82,11 @@ impl SubCommand {
         }
     }
 }
+
+#[macro_export]
+macro_rules! echo {
+    ($($arg:tt)*) => {
+        println!();
+        println!($($arg)*);
+    };
+}

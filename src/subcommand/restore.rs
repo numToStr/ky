@@ -3,6 +3,7 @@ use std::{fs::remove_dir_all, path::PathBuf};
 use super::Command;
 use crate::{
     cli::Config,
+    echo,
     lib::{KyError, Prompt, Vault},
 };
 use clap::Clap;
@@ -45,7 +46,7 @@ impl Command for Restore {
 
         Vault::new(&backup_path).restore(&db_path)?;
 
-        println!("Vault successfully restored");
+        echo!("> Vault restored!");
 
         Ok(())
     }

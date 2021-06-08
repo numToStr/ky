@@ -1,12 +1,11 @@
-use std::fs::remove_dir_all;
-
-use clap::Clap;
-
 use crate::{
     check_db,
     cli::Config,
+    echo,
     lib::{Database, KyError, Password, Prompt, MASTER},
 };
+use clap::Clap;
+use std::fs::remove_dir_all;
 
 use super::Command;
 
@@ -34,7 +33,7 @@ impl Command for Nuke {
             remove_dir_all(db_path)?;
         }
 
-        println!("Vault successfully nuked");
+        echo!("> Vault nuked!");
 
         Ok(())
     }

@@ -2,6 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
+    echo,
     lib::{Database, KyError, Password, Prompt, Vault, MASTER},
 };
 use clap::Clap;
@@ -50,7 +51,7 @@ impl Command for Backup {
 
         Vault::new(&db_path).backup(&backup_path)?;
 
-        println!("Backup successful: {}", style(backup_path.display()).bold());
+        echo!("> Vault backed-up: {}", style(backup_path.display()).bold());
 
         Ok(())
     }

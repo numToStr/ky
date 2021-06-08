@@ -1,6 +1,7 @@
 use super::Command;
 use crate::{
     cli::Config,
+    echo,
     lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
@@ -23,6 +24,8 @@ impl Command for Init {
         let hashed = password.hash()?;
 
         db.set(MASTER, &hashed)?;
+
+        echo!("> Vault Initiliazed!");
 
         Ok(())
     }

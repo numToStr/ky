@@ -2,6 +2,7 @@ use super::Command;
 use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
+    echo,
     lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
@@ -42,8 +43,7 @@ impl Command for Edit {
 
         let encrypted = db.get(&self.key)?;
 
-        println!();
-        println!(
+        echo!(
             "  {}",
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
@@ -80,6 +80,8 @@ impl Command for Edit {
         });
 
         db.set(&self.key, &new_value.to_string())?;
+
+        echo!("> Entry edited: {}", style(&self.key).bold());
 
         Ok(())
     }

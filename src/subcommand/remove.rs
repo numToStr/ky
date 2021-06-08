@@ -2,6 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
+    echo,
     lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
@@ -36,7 +37,7 @@ impl Command for Remove {
 
         if Prompt::proceed(&theme)? {
             db.delete(&self.key)?;
-            println!("Entry successfully deleted: {}", style(&self.key).bold());
+            echo!("> Entry deleted: {}", style(&self.key).bold());
         }
 
         Ok(())

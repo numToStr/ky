@@ -2,9 +2,11 @@ use super::Command;
 use crate::{
     check_db,
     cli::{Config, PasswordParams},
+    echo,
     lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
+use dialoguer::console::style;
 
 #[macro_export]
 macro_rules! check_encrypt {
@@ -67,6 +69,8 @@ impl Command for Add {
         });
 
         db.set(&self.key, &value.to_string())?;
+
+        echo!("> Entry added: {}", style(&self.key).bold());
 
         Ok(())
     }
