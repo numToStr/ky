@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
+    lib::{Cipher, Database2, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -30,15 +30,19 @@ impl Command for Edit {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let db = Database2::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        let encrypted = db.get(&self.key)?;
+        let encrypted = db.get(&rtxn, &self.key)?;
+
+        rtxn.commit()?;
 
         echo!(
             "  {}",
@@ -76,7 +80,11 @@ impl Command for Edit {
             notes: check_encrypt!(cipher, notes),
         });
 
-        db.set(&self.key, &new_value.to_string())?;
+        let mut wtxn = db.write_txn()?;
+
+        db.set(&mut wtxn, &self.key, &new_value.to_string())?;
+
+        wtxn.commit()?;
 
         echo!("> Entry edited: {}", style(&self.key).bold());
 
