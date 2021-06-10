@@ -5,6 +5,7 @@ mod gen;
 mod git;
 mod init;
 mod ls;
+mod r#move;
 mod nuke;
 mod remove;
 mod restore;
@@ -15,7 +16,7 @@ use clap::Subcommand;
 
 use self::{
     add::Add, backup::Backup, edit::Edit, gen::Generate, git::GitCmd, init::Init, ls::Ls,
-    nuke::Nuke, remove::Remove, restore::Restore, show::Show,
+    nuke::Nuke, r#move::Move, remove::Remove, restore::Restore, show::Show,
 };
 
 pub(self) trait Command {
@@ -56,13 +57,17 @@ pub enum SubCommand {
     /// Restore the vault backup
     Restore(Restore),
 
-    /// Permanently remove the vault
+    /// Permanently delete the local vault
     ///
     /// CAUTION: Please backup before doing this, otherwise you will loose all of your data.
     Nuke(Nuke),
 
     /// Use git to manage the vault
     Git(GitCmd),
+
+    /// Rename the key and re-encrypt the entry's details
+    #[clap(visible_alias = "mv")]
+    Move(Move),
 }
 
 impl SubCommand {
@@ -79,6 +84,7 @@ impl SubCommand {
             Self::Restore(c) => c.exec(config),
             Self::Nuke(c) => c.exec(config),
             Self::Git(c) => c.exec(config),
+            Self::Move(c) => c.exec(config),
         }
     }
 }
