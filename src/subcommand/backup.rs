@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, Vault, MASTER},
+    lib::{Database2, KyError, Password, Prompt, Vault, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -29,9 +29,13 @@ impl Command for Backup {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let db = Database2::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+
+        let hashed = db.get(&rtxn, MASTER)?;
+
+        rtxn.commit()?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
