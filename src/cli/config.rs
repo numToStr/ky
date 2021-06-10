@@ -25,7 +25,7 @@ pub struct Config {
 }
 
 impl Config {
-    fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
+    pub fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
         create_dir_all(&path).ok();
         path
     }
@@ -41,13 +41,16 @@ impl Config {
             .join(concat!(crate_name!(), ".backup"))
     }
 
-    pub fn db_path(&self) -> PathBuf {
+    pub fn vault_home(&self) -> PathBuf {
         self.ensure_create(
             self.vault_path
                 .clone()
                 .unwrap_or_else(|| self.ky_home().join("vault")),
         )
-        .join(concat!(crate_name!(), ".db"))
+    }
+
+    pub fn db_path(&self) -> PathBuf {
+        self.vault_home().join(concat!(crate_name!(), ".db"))
     }
 }
 

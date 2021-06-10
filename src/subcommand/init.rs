@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Database2, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -17,13 +17,17 @@ impl Command for Init {
             return Err(KyError::Init);
         }
 
-        let db = Database::init(&db_path)?;
+        let db = Database2::open(config.ensure_create(&db_path))?;
 
         let password = Password::init(&Prompt::theme())?;
 
         let hashed = password.hash()?;
 
-        db.set(MASTER, &hashed)?;
+        let mut txn = db.write_txn()?;
+
+        db.set(&mut txn, MASTER, &hashed)?;
+
+        txn.commit()?;
 
         echo!("> Vault Initiliazed!");
 
