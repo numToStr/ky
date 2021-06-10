@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::Config,
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database2, Keys, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -25,9 +25,11 @@ impl Command for Move {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let db = Database2::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
@@ -35,12 +37,14 @@ impl Command for Move {
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let value = db.get(&self.old_key)?;
+        let value = db.get(&rtxn, &self.old_key)?;
 
         // now check if the new key exists or not
-        if db.exist(&self.new_key)? {
+        if db.get(&rtxn, &self.new_key).is_ok() {
             return Err(KyError::Exist(self.new_key.to_string()));
         }
+
+        rtxn.commit()?;
 
         echo!("- Decrypting old details...");
         let old_value = Value::from(value.as_ref());
@@ -62,8 +66,12 @@ impl Command for Move {
             notes: check_encrypt!(new_cipher, Some(old_notes)),
         });
 
-        db.set(&self.new_key, &new_value.to_string())?;
-        db.delete(&self.old_key)?;
+        let mut wtxn = db.write_txn()?;
+
+        db.set(&mut wtxn, &self.new_key, &new_value.to_string())?;
+        db.delete(&mut wtxn, &self.old_key)?;
+
+        wtxn.commit()?;
 
         echo!(
             "> Entry moved: {} -> {}",
