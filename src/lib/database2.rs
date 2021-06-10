@@ -1,4 +1,4 @@
-use super::KyError;
+use super::{KyError, MASTER};
 use heed::{types::Str, Database, Env, EnvOpenOptions, RoTxn, RwTxn};
 use std::path::Path;
 
@@ -61,6 +61,20 @@ impl Database2 {
             .map_err(|_| KyError::Delete(key.to_string()))?;
 
         Ok(is_deleted)
+    }
+
+    pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<String>, KyError> {
+        let mut keys = Vec::new();
+
+        for kv in self.conn.iter(rtxn)? {
+            let (k, _) = kv?;
+
+            if k != MASTER {
+                keys.push(k.to_string());
+            }
+        }
+
+        Ok(keys)
     }
 }
 
