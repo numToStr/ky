@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database2, KyError, Password, Prompt, MASTER},
+    lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -23,7 +23,7 @@ impl Command for Remove {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database2::open(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let rtxn = db.read_txn()?;
         let hashed = db.get(&rtxn, MASTER)?;

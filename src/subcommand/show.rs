@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database2, KyError, Password, Prompt, Qr, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -49,7 +49,7 @@ impl Command for Show {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database2::open(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let rtxn = db.read_txn()?;
         let hashed = db.get(&rtxn, &MASTER)?;

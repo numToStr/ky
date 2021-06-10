@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{Database2, KyError, Password, Prompt, MASTER},
+    lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -17,7 +17,7 @@ impl Command for Init {
             return Err(KyError::Init);
         }
 
-        let db = Database2::open(config.ensure_create(&db_path))?;
+        let db = Database::open(config.ensure_create(&db_path))?;
 
         let password = Password::init(&Prompt::theme())?;
 

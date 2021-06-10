@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::Config,
     echo,
-    lib::{Cipher, Database2, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -25,7 +25,7 @@ impl Command for Move {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database2::open(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let rtxn = db.read_txn()?;
 

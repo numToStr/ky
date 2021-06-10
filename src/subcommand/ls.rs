@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Database2, KyError, Password, Prompt, MASTER},
+    lib::{Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -18,7 +18,7 @@ impl Command for Ls {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database2::open(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let rtxn = db.read_txn()?;
 

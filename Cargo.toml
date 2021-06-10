@@ -9,9 +9,6 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# Don't enable `zstd` compression for rocksdb, otherwise it will panic with `zstd` dependency
-# Or explore https://github.com/tikv/rust-rocksdb or https://github.com/spacejam/sled
-rocksdb = { version = "0.16.0", default-features = false, features = ["lz4"] }
 thiserror = "1.0.25"
 clap = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
 dialoguer = "0.8.0"
@@ -34,3 +31,4 @@ debug = 0
 lto = true
 codegen-units = 1
 panic = "abort"
+opt-level = 3

@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database2, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
+    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -30,7 +30,7 @@ impl Command for Edit {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database2::open(&db_path)?;
+        let db = Database::open(&db_path)?;
 
         let rtxn = db.read_txn()?;
 

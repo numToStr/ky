@@ -1,6 +1,5 @@
 mod cipher;
 mod database;
-mod database2;
 mod error;
 mod git;
 mod password;
@@ -12,7 +11,6 @@ mod vault;
 
 pub use cipher::*;
 pub use database::*;
-pub use database2::*;
 pub use error::*;
 pub use git::*;
 pub use password::*;
