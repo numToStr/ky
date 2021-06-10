@@ -53,6 +53,15 @@ impl Database2 {
             _ => Err(KyError::NotFound(key.to_string())),
         }
     }
+
+    pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> Result<bool, KyError> {
+        let is_deleted = self
+            .conn
+            .delete(wtxn, key)
+            .map_err(|_| KyError::Delete(key.to_string()))?;
+
+        Ok(is_deleted)
+    }
 }
 
 // {

@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Database2, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -23,21 +23,30 @@ impl Command for Remove {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let db = Database2::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        if !db.exist(&self.key)? {
-            return Err(KyError::NotFound(self.key.to_string()));
-        }
+        rtxn.commit()?;
 
         if Prompt::proceed(&theme)? {
-            db.delete(&self.key)?;
-            echo!("> Entry deleted: {}", style(&self.key).bold());
+            let mut wtxn = db.write_txn()?;
+
+            match db.delete(&mut wtxn, &self.key)? {
+                true => {
+                    echo!("> Entry deleted: {}", style(&self.key).bold());
+                }
+                _ => {
+                    return Err(KyError::NotFound(self.key.to_string()));
+                }
+            };
+
+            wtxn.commit()?;
         }
 
         Ok(())
