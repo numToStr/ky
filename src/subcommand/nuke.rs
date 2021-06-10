@@ -2,7 +2,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Database2, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use std::fs::remove_dir_all;
@@ -21,9 +21,11 @@ impl Command for Nuke {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let db = Database2::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+        let hashed = db.get(&rtxn, MASTER)?;
+        rtxn.commit()?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
