@@ -13,12 +13,9 @@ pub struct Edit {
     /// Entry which needs to be edited
     key: String,
 
-    // /// Allow key of the entry to be edited
-    // #[clap(short, long)]
-    // key_edit: bool,
     /// Allow password to be regenerated
     #[clap(short, long)]
-    password_gen: bool,
+    password: bool,
 
     #[clap(flatten)]
     pwd_opt: PasswordParams,
@@ -63,7 +60,7 @@ impl Command for Edit {
         let notes_decrypted = check_decrypt!(cipher, &value.keys.notes);
         let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
 
-        let password = if self.password_gen {
+        let password = if self.password {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
             println!("{} Password regenerated", style(PREFIX).bold());
             p
