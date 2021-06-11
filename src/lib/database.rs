@@ -87,34 +87,3 @@ impl Database {
         Ok(keys)
     }
 }
-
-// {
-//         create_dir_all(Path::new(&config.vault_home()).join("bytemuck.mdb"))?;
-//         let env = EnvOpenOptions::new()
-//             .open(Path::new(&config.vault_home()).join("bytemuck.mdb"))
-//             .unwrap();
-//
-//         // we will open the default unamed database
-//         let db: Database<Str, OwnedType<i32>> = env.create_database(None).unwrap();
-//
-//         // opening a write transaction
-//         let mut wtxn = env.write_txn().unwrap();
-//         db.put(&mut wtxn, "seven", &7).unwrap();
-//         db.put(&mut wtxn, "zero", &0).unwrap();
-//         db.put(&mut wtxn, "five", &5).unwrap();
-//         db.put(&mut wtxn, "three", &3).unwrap();
-//         wtxn.commit().unwrap();
-//
-//         // opening a read transaction
-//         // to check if those values are now available
-//         let rtxn = env.read_txn().unwrap();
-//
-//         let ret = db.get(&rtxn, "zero").unwrap();
-//         println!("{:#?}", ret);
-//         // assert_eq!(ret, Some(0));
-//
-//         let ret = db.get(&rtxn, "five").unwrap();
-//         println!("{:#?}", ret);
-//         // assert_eq!(ret, Some(5));
-//         Ok(())
-//     }
