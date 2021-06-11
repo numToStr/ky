@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::Config,
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -50,21 +50,21 @@ impl Command for Move {
         let old_value = Value::from(value.as_ref());
         let old_cipher = Cipher::new(&master_pwd.to_string(), &self.old_key);
 
-        let old_username = check_decrypt!(old_cipher, &old_value.keys.username);
-        let old_password = check_decrypt!(old_cipher, &old_value.keys.password);
-        let old_url = check_decrypt!(old_cipher, &old_value.keys.url);
-        let old_expires = check_decrypt!(old_cipher, &old_value.keys.expires);
-        let old_notes = check_decrypt!(old_cipher, &old_value.keys.notes);
+        let old_username = check_decrypt!(old_cipher, &old_value.username);
+        let old_password = check_decrypt!(old_cipher, &old_value.password);
+        let old_url = check_decrypt!(old_cipher, &old_value.url);
+        let old_expires = check_decrypt!(old_cipher, &old_value.expires);
+        let old_notes = check_decrypt!(old_cipher, &old_value.notes);
 
         println!("- Encrypting new details...");
         let new_cipher = Cipher::new(&master_pwd.to_string(), &self.new_key);
-        let new_value = Value::new(Keys {
+        let new_value = Value {
             username: check_encrypt!(new_cipher, Some(old_username)),
             password: check_encrypt!(new_cipher, Some(old_password)),
             url: check_encrypt!(new_cipher, Some(old_url)),
             expires: check_encrypt!(new_cipher, Some(old_expires)),
             notes: check_encrypt!(new_cipher, Some(old_notes)),
-        });
+        };
 
         let mut wtxn = db.write_txn()?;
 

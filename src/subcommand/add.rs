@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -63,13 +63,13 @@ impl Command for Add {
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let value = Value::new(Keys {
+        let value = Value {
             password: cipher.encrypt(&new_pass)?,
             username: check_encrypt!(cipher, username),
             url: check_encrypt!(cipher, url),
             expires: check_encrypt!(cipher, expires),
             notes: check_encrypt!(cipher, notes),
-        });
+        };
 
         let mut wtxn = db.write_txn()?;
         db.set(&mut wtxn, &self.key, &value.to_string())?;
