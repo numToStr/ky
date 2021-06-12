@@ -32,11 +32,11 @@ jobs:
                           target: x86_64-unknown-linux-gnu,
                           use_cross: false,
                       }
-                    # - {
-                    #       os: windows-latest,
-                    #       target: x86_64-pc-windows-msvc,
-                    #       use_cross: false,
-                    #   }
+                    - {
+                          os: windows-latest,
+                          target: x86_64-pc-windows-msvc,
+                          use_cross: false,
+                      }
                     - {
                           os: macos-latest,
                           target: x86_64-apple-darwin,
@@ -48,13 +48,13 @@ jobs:
             - name: Git Checkout
               uses: actions/checkout@v2
 
-            # - name: Install prerequisites
-            #   shell: bash
-            #   run: |
-            #       case ${{ matrix.job.target }} in
-            #         armv7-unknown-linux-gnueabihf) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
-            #         aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
-            #       esac
+            - name: Install prerequisites
+              shell: bash
+              run: |
+                  case ${{ matrix.job.target }} in
+                    armv7-unknown-linux-gnueabihf) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+                    aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+                  esac
 
             - name: Initialize workflow variables
               id: vars
@@ -152,27 +152,27 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # publish_rust_crate:
-    #     name: Publish Rust Crate on crates.io
-    #     runs-on: ubuntu-latest
-    #     timeout-minutes: 20
-    #     needs: build
-    #     # if: startsWith(github.ref, 'refs/tags/')
-    #     steps:
-    #         - uses: actions/checkout@v2
-    #
-    #         - name: Install Rust toolchain
-    #           uses: actions-rs/toolchain@v1
-    #           with:
-    #               toolchain: stable
-    #               override: true
-    #               profile: minimal
-    #
-    #         - name: Publish
-    #           uses: actions-rs/cargo@v1
-    #           with:
-    #               command: publish
-    #               args: --verbose --all-features --token ${{ secrets.CARGO_TOKEN }}
+    publish_rust_crate:
+        name: Publish Rust Crate on crates.io
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        needs: build
+        # if: startsWith(github.ref, 'refs/tags/')
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Install Rust toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  override: true
+                  profile: minimal
+
+            - name: Publish
+              uses: actions-rs/cargo@v1
+              with:
+                  command: publish
+                  args: --verbose --all-features --token ${{ secrets.CARGO_TOKEN }}
 
     # publish_aur_package:
     #     name: Publish AUR package
