@@ -75,10 +75,17 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    pub fn push(self) -> Result<Self, KyError> {
+    pub fn push(self, force: bool) -> Result<Self, KyError> {
         let status = self
             .git()
-            .args(&["-C", &self.target, "push", &self.repo, &self.branch])
+            .args(&[
+                "-C",
+                &self.target,
+                "push",
+                &self.repo,
+                &self.branch,
+                if force { "--force" } else { "--no-force" },
+            ])
             .spawn()?
             .wait()?;
 

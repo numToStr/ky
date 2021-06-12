@@ -54,14 +54,22 @@ impl Command for GitInit {
             .init()?
             .add()?
             .commit()?
-            .push()?;
+            .push(false)?;
 
         Ok(())
     }
 }
 
 #[derive(Debug, Clap)]
-pub struct GitPush;
+pub struct GitPush {
+    /// Force push
+    #[clap(short, long)]
+    force: bool,
+
+    /// Push without committing
+    #[clap(short, long)]
+    no_commit: bool,
+}
 
 impl Command for GitPush {
     fn exec(&self, config: Config) -> Result<(), KyError> {
@@ -75,7 +83,13 @@ impl Command for GitPush {
 
         let (repo, branch) = check_git_details!(config.git_repo, config.git_branch)?;
 
-        Git::new(&repo, &branch, &db_path).add()?.commit()?.push()?;
+        let git = Git::new(&repo, &branch, &db_path);
+
+        if self.no_commit {
+            git.push(self.force)?;
+        } else {
+            git.add()?.commit()?.push(self.force)?;
+        }
 
         Ok(())
     }
