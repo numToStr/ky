@@ -353,7 +353,7 @@ dependencies = [
  "heed-traits",
  "heed-types",
  "libc",
- "mdbx-sys",
+ "lmdb-rkv-sys",
  "once_cell",
  "page_size",
  "synchronoise",
@@ -464,21 +464,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "789da6d93f1b866ffe175afc5322a4d76c038605a1c3319bb57b06967ca98a36"
 
 [[package]]
-name = "matches"
-version = "0.1.8"
+name = "lmdb-rkv-sys"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
-
-[[package]]
-name = "mdbx-sys"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c95c2ebc939b476d871dcb8d3bd5e6ef07bddabb39e935dbd8a6bffc93dc6dd7"
+checksum = "b27470ac25167b3afdfb6af8fcd3bc1be67de50ffbdaf4073378cfded6ae24a5"
 dependencies = [
  "cc",
  "libc",
  "pkg-config",
 ]
+
+[[package]]
+name = "matches"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 
 [[package]]
 name = "once_cell"
