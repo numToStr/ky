@@ -37,6 +37,8 @@ impl Command for Backup {
 
         rtxn.commit()?;
 
+        db.close();
+
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }

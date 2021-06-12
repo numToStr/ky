@@ -31,6 +31,8 @@ impl Command for Init {
 
         echo!("> Vault Initiliazed!");
 
+        db.close();
+
         Ok(())
     }
 }

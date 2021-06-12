@@ -30,6 +30,8 @@ impl Command for Ls {
 
         let keys = db.ls(&rtxn)?;
 
+        rtxn.commit()?;
+
         println!();
         if keys.is_empty() {
             println!("> No entries found!");
@@ -38,6 +40,8 @@ impl Command for Ls {
                 println!("- {}", key);
             }
         }
+
+        db.close();
 
         Ok(())
     }

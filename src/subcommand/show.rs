@@ -64,6 +64,8 @@ impl Command for Show {
 
         rtxn.commit()?;
 
+        db.close();
+
         let value = Value::from(crypted.as_str());
 
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);

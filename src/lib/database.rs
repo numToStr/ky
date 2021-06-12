@@ -86,4 +86,8 @@ impl Database {
 
         Ok(keys)
     }
+
+    pub fn close(self) {
+        self.env.prepare_for_closing().wait();
+    }
 }

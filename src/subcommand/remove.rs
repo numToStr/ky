@@ -48,6 +48,8 @@ impl Command for Remove {
             wtxn.commit()?;
         }
 
+        db.close();
+
         Ok(())
     }
 }

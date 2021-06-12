@@ -75,6 +75,8 @@ impl Command for Add {
         db.set(&mut wtxn, &self.key, &value.to_string())?;
         wtxn.commit()?;
 
+        db.close();
+
         echo!("> Entry added: {}", style(&self.key).bold());
 
         Ok(())

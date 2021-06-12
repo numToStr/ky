@@ -86,6 +86,8 @@ impl Command for Edit {
 
         wtxn.commit()?;
 
+        db.close();
+
         echo!("> Entry edited: {}", style(&self.key).bold());
 
         Ok(())

@@ -27,6 +27,8 @@ impl Command for Nuke {
         let hashed = db.get(&rtxn, MASTER)?;
         rtxn.commit()?;
 
+        db.close();
+
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }

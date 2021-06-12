@@ -73,6 +73,8 @@ impl Command for Move {
 
         wtxn.commit()?;
 
+        db.close();
+
         echo!(
             "> Entry moved: {} -> {}",
             style(&self.old_key).bold(),
