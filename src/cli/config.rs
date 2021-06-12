@@ -30,7 +30,7 @@ impl Config {
         path
     }
 
-    fn ky_home(&self) -> PathBuf {
+    pub fn ky_home(&self) -> PathBuf {
         home_dir()
             .expect("Unable to get the home directory")
             .join(concat!(".", crate_name!()))

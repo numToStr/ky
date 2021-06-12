@@ -10,7 +10,11 @@ use std::fs::remove_dir_all;
 use super::Command;
 
 #[derive(Debug, Clap)]
-pub struct Nuke;
+pub struct Nuke {
+    /// Delete everything, including default backup (if any)
+    #[clap(short, long)]
+    all: bool,
+}
 
 impl Command for Nuke {
     fn exec(&self, config: Config) -> Result<(), KyError> {
@@ -33,11 +37,19 @@ impl Command for Nuke {
             return Err(KyError::MisMatch);
         }
 
-        if Prompt::proceed(&theme)? {
-            remove_dir_all(db_path)?;
-        }
+        let proceed = Prompt::proceed(&theme)?;
 
-        echo!("> Vault nuked!");
+        match (proceed, self.all) {
+            (true, true) => {
+                remove_dir_all(config.ky_home())?;
+                echo!("> Everything nuked!");
+            }
+            (true, false) => {
+                remove_dir_all(db_path)?;
+                echo!("> Vault nuked!");
+            }
+            _ => {}
+        }
 
         Ok(())
     }
