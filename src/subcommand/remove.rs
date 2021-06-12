@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Database2, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -23,32 +23,32 @@ impl Command for Remove {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let env = Database2::env(&db_path)?;
+        let txn = env.begin_rw_txn()?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, MASTER)?;
+        let db = Database2::open(&txn)?;
+
+        let hashed = db.get(MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        rtxn.commit()?;
+        let res = match db.get(&self.key) {
+            Ok(val) => {
+                if Prompt::proceed(&theme)? {
+                    db.delete(&self.key, &val)?;
 
-        if Prompt::proceed(&theme)? {
-            let mut wtxn = db.write_txn()?;
-
-            match db.delete(&mut wtxn, &self.key)? {
-                true => {
                     echo!("> Entry deleted: {}", style(&self.key).bold());
                 }
-                _ => {
-                    return Err(KyError::NotFound(self.key.to_string()));
-                }
-            };
 
-            wtxn.commit()?;
-        }
+                Ok(())
+            }
+            _ => Err(KyError::NotFound(self.key.to_string())),
+        };
 
-        Ok(())
+        txn.commit()?;
+
+        res
     }
 }

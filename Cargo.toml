@@ -22,7 +22,8 @@ tabled = "0.1.4"
 tar = "0.4.35"
 zstd = "0.8.3"
 qrcodegen = "1.6.0"
-heed = { version = "0.11.0", default-features = false, features = ["mdbx"] }
+# heed = { version = "0.11.0", default-features = false, features = ["mdbx"] }
+mdbx = { git = "https://github.com/vorot93/mdbx-rs", rev = "4cfcfa4" }
 
 [profile.dev]
 debug = 0

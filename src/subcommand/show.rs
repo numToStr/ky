@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
+    lib::{Cipher, Database2, KyError, Password, Prompt, Qr, Value, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -49,10 +49,12 @@ impl Command for Show {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let env = Database2::env(&db_path)?;
+        let txn = env.begin_rw_txn()?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, &MASTER)?;
+        let db = Database2::open(&txn)?;
+
+        let hashed = db.get(&MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
@@ -60,9 +62,9 @@ impl Command for Show {
 
         // The crypted data returned from database
         // Will be in this format password:username:url:expires:notes
-        let crypted = db.get(&rtxn, &self.key)?;
+        let crypted = db.get(&self.key)?;
 
-        rtxn.commit()?;
+        txn.commit()?;
 
         let value = Value::from(crypted.as_str());
 

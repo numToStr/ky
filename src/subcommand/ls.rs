@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Database2, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -18,17 +18,19 @@ impl Command for Ls {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let env = Database2::env(&db_path)?;
 
-        let rtxn = db.read_txn()?;
+        let txn = env.begin_rw_txn()?;
 
-        let hashed = db.get(&rtxn, MASTER)?;
+        let db = Database2::open(&txn)?;
+
+        let hashed = db.get(MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        let keys = db.ls(&rtxn)?;
+        let keys = db.ls()?;
 
         println!();
         if keys.is_empty() {
@@ -38,6 +40,8 @@ impl Command for Ls {
                 println!("- {}", key);
             }
         }
+
+        txn.commit()?;
 
         Ok(())
     }
