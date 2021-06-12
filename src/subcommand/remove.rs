@@ -25,20 +25,30 @@ impl Command for Remove {
 
         let db = Database::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        if !db.exist(&self.key)? {
+        if db.get(&rtxn, &self.key).is_err() {
             return Err(KyError::NotFound(self.key.to_string()));
         }
 
+        rtxn.commit()?;
+
         if Prompt::proceed(&theme)? {
-            db.delete(&self.key)?;
+            let mut wtxn = db.write_txn()?;
+
+            db.delete(&mut wtxn, &self.key)?;
+
             echo!("> Entry deleted: {}", style(&self.key).bold());
+
+            wtxn.commit()?;
         }
+
+        db.close();
 
         Ok(())
     }

@@ -31,7 +31,13 @@ impl Command for Backup {
 
         let db = Database::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+
+        let hashed = db.get(&rtxn, MASTER)?;
+
+        rtxn.commit()?;
+
+        db.close();
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);

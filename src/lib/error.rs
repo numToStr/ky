@@ -71,3 +71,9 @@ impl From<io::Error> for KyError {
         Self::Any(s.to_string())
     }
 }
+
+impl From<heed::Error> for KyError {
+    fn from(s: heed::Error) -> Self {
+        Self::Any(s.to_string())
+    }
+}

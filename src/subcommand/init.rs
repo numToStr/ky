@@ -17,15 +17,21 @@ impl Command for Init {
             return Err(KyError::Init);
         }
 
-        let db = Database::init(&db_path)?;
+        let db = Database::open(config.ensure_create(&db_path))?;
 
         let password = Password::init(&Prompt::theme())?;
 
         let hashed = password.hash()?;
 
-        db.set(MASTER, &hashed)?;
+        let mut txn = db.write_txn()?;
+
+        db.set(&mut txn, MASTER, &hashed)?;
+
+        txn.commit()?;
 
         echo!("> Vault Initiliazed!");
+
+        db.close();
 
         Ok(())
     }

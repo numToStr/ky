@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -40,15 +40,18 @@ impl Command for Add {
 
         let db = Database::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        if db.exist(&self.key)? {
+        if db.get(&rtxn, &self.key).is_ok() {
             return Err(KyError::Exist(self.key.to_string()));
         }
+
+        rtxn.commit()?;
 
         let username = Prompt::username(&theme)?;
         let url = Prompt::url(&theme)?;
@@ -60,15 +63,19 @@ impl Command for Add {
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let value = Value::new(Keys {
+        let value = Value {
             password: cipher.encrypt(&new_pass)?,
             username: check_encrypt!(cipher, username),
             url: check_encrypt!(cipher, url),
             expires: check_encrypt!(cipher, expires),
             notes: check_encrypt!(cipher, notes),
-        });
+        };
 
-        db.set(&self.key, &value.to_string())?;
+        let mut wtxn = db.write_txn()?;
+        db.set(&mut wtxn, &self.key, &value.to_string())?;
+        wtxn.commit()?;
+
+        db.close();
 
         echo!("> Entry added: {}", style(&self.key).bold());
 

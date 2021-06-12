@@ -25,7 +25,7 @@ pub struct Config {
 }
 
 impl Config {
-    fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
+    pub fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
         create_dir_all(&path).ok();
         path
     }

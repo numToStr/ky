@@ -10,22 +10,12 @@ macro_rules! create_key {
     };
 }
 
-pub struct Keys {
+pub struct Value {
     pub password: String,
     pub username: String,
     pub url: String,
     pub expires: String,
     pub notes: String,
-}
-
-pub struct Value {
-    pub keys: Keys,
-}
-
-impl Value {
-    pub fn new(keys: Keys) -> Self {
-        Self { keys }
-    }
 }
 
 impl From<&str> for Value {
@@ -38,13 +28,13 @@ impl From<&str> for Value {
         let expires = create_key!(keys);
         let notes = create_key!(keys);
 
-        Self::new(Keys {
+        Self {
             password,
             username,
             url,
             expires,
             notes,
-        })
+        }
     }
 }
 
@@ -53,11 +43,11 @@ impl Display for Value {
         write!(
             f,
             "{}{d}{}{d}{}{d}{}{d}{}",
-            self.keys.password,
-            self.keys.username,
-            self.keys.url,
-            self.keys.expires,
-            self.keys.notes,
+            self.password,
+            self.username,
+            self.url,
+            self.expires,
+            self.notes,
             d = DELIM,
         )
     }

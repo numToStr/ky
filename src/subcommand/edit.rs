@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Keys, KyError, Password, Prompt, Value, MASTER, PREFIX},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -32,13 +32,17 @@ impl Command for Edit {
 
         let db = Database::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+
+        let hashed = db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
         }
 
-        let encrypted = db.get(&self.key)?;
+        let encrypted = db.get(&rtxn, &self.key)?;
+
+        rtxn.commit()?;
 
         echo!(
             "  {}",
@@ -48,16 +52,16 @@ impl Command for Edit {
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
         let value = Value::from(encrypted.as_str());
 
-        let username_decrypted = check_decrypt!(cipher, &value.keys.username);
+        let username_decrypted = check_decrypt!(cipher, &value.username);
         let username = Prompt::username_with_default(&theme, username_decrypted)?;
 
-        let url_decrypted = check_decrypt!(cipher, &value.keys.url);
+        let url_decrypted = check_decrypt!(cipher, &value.url);
         let url = Prompt::url_with_default(&theme, url_decrypted)?;
 
-        let expires_decrypted = check_decrypt!(cipher, &value.keys.expires);
+        let expires_decrypted = check_decrypt!(cipher, &value.expires);
         let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
 
-        let notes_decrypted = check_decrypt!(cipher, &value.keys.notes);
+        let notes_decrypted = check_decrypt!(cipher, &value.notes);
         let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
 
         let password = if self.password {
@@ -65,18 +69,24 @@ impl Command for Edit {
             println!("{} Password regenerated", style(PREFIX).bold());
             p
         } else {
-            value.keys.password
+            value.password
         };
 
-        let new_value = Value::new(Keys {
+        let new_value = Value {
             password,
             username: check_encrypt!(cipher, username),
             url: check_encrypt!(cipher, url),
             expires: check_encrypt!(cipher, expires),
             notes: check_encrypt!(cipher, notes),
-        });
+        };
 
-        db.set(&self.key, &new_value.to_string())?;
+        let mut wtxn = db.write_txn()?;
+
+        db.set(&mut wtxn, &self.key, &new_value.to_string())?;
+
+        wtxn.commit()?;
+
+        db.close();
 
         echo!("> Entry edited: {}", style(&self.key).bold());
 

@@ -51,7 +51,8 @@ impl Command for Show {
 
         let db = Database::open(&db_path)?;
 
-        let hashed = db.get(MASTER)?;
+        let rtxn = db.read_txn()?;
+        let hashed = db.get(&rtxn, &MASTER)?;
 
         if !master_pwd.verify(&hashed) {
             return Err(KyError::MisMatch);
@@ -59,7 +60,12 @@ impl Command for Show {
 
         // The crypted data returned from database
         // Will be in this format password:username:url:expires:notes
-        let crypted = db.get(&self.key)?;
+        let crypted = db.get(&rtxn, &self.key)?;
+
+        rtxn.commit()?;
+
+        db.close();
+
         let value = Value::from(crypted.as_str());
 
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
@@ -70,7 +76,7 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(check_decrypt!(cipher, &value.keys.password))
+            Some(check_decrypt!(cipher, &value.password))
         } else {
             None
         };
@@ -86,7 +92,7 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Detail("Username", check_decrypt!(cipher, &value.keys.username)),
+            Detail("Username", check_decrypt!(cipher, &value.username)),
             Detail(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
@@ -95,9 +101,9 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("URL", check_decrypt!(cipher, &value.keys.url)),
-            Detail("Expires", check_decrypt!(cipher, &value.keys.expires)),
-            Detail("Notes", check_decrypt!(cipher, &value.keys.notes)),
+            Detail("URL", check_decrypt!(cipher, &value.url)),
+            Detail("Expires", check_decrypt!(cipher, &value.expires)),
+            Detail("Notes", check_decrypt!(cipher, &value.notes)),
         ];
 
         let table = table!(
