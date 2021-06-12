@@ -17,11 +17,11 @@ impl Command for Init {
             return Err(KyError::Init);
         }
 
-        let db = Database::open(config.ensure_create(&db_path))?;
-
         let password = Password::init(&Prompt::theme())?;
 
         let hashed = password.hash()?;
+
+        let db = Database::open(config.ensure_create(&db_path))?;
 
         let mut txn = db.write_txn()?;
 
