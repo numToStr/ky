@@ -32,19 +32,18 @@ impl Command for Remove {
             return Err(KyError::MisMatch);
         }
 
+        if db.get(&rtxn, &self.key).is_err() {
+            return Err(KyError::NotFound(self.key.to_string()));
+        }
+
         rtxn.commit()?;
 
         if Prompt::proceed(&theme)? {
             let mut wtxn = db.write_txn()?;
 
-            match db.delete(&mut wtxn, &self.key)? {
-                true => {
-                    echo!("> Entry deleted: {}", style(&self.key).bold());
-                }
-                _ => {
-                    return Err(KyError::NotFound(self.key.to_string()));
-                }
-            };
+            db.delete(&mut wtxn, &self.key)?;
+
+            echo!("> Entry deleted: {}", style(&self.key).bold());
 
             wtxn.commit()?;
         }
