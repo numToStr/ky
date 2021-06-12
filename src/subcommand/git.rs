@@ -36,7 +36,11 @@ impl Command for GitCmd {
 }
 
 #[derive(Debug, Clap)]
-pub struct GitInit;
+pub struct GitInit {
+    /// Push after initialization
+    #[clap(short, long)]
+    push: bool,
+}
 
 impl Command for GitInit {
     fn exec(&self, config: Config) -> Result<(), KyError> {
@@ -50,11 +54,11 @@ impl Command for GitInit {
 
         let (repo, branch) = check_git_details!(config.git_repo, config.git_branch)?;
 
-        Git::new(&repo, &branch, &db_path)
-            .init()?
-            .add()?
-            .commit()?
-            .push(false)?;
+        let git = Git::new(&repo, &branch, &db_path).init()?.add()?.commit()?;
+
+        if self.push {
+            git.push(false)?;
+        }
 
         Ok(())
     }
