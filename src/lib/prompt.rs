@@ -74,6 +74,11 @@ impl Prompt {
         Self::confirm("Backup already exists. Do you want to proceed?", theme)
     }
 
+    #[inline]
+    pub fn export_exist(theme: &impl Theme) -> io::Result<bool> {
+        Self::confirm("Export already exists. Do you want to proceed?", theme)
+    }
+
     pub fn vault_exist(theme: &impl Theme) -> io::Result<bool> {
         Self::confirm("Vault already exists. Do you want to proceed?", theme)
     }

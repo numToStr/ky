@@ -41,6 +41,11 @@ impl Config {
             .join(concat!(crate_name!(), ".backup"))
     }
 
+    pub fn csv_path(&self) -> PathBuf {
+        self.ensure_create(self.ky_home().join("backup"))
+            .join(concat!(crate_name!(), ".csv"))
+    }
+
     pub fn db_path(&self) -> PathBuf {
         self.ensure_create(
             self.vault_path

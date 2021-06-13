@@ -1,5 +1,20 @@
-use super::KyError;
+use super::{KyError, Value};
+use crate::{check_decrypt, lib::Cipher};
+use csv::Writer;
+use serde::Serialize;
 use std::{fs::File, path::Path};
+
+/// Row represent a csv row.
+/// NOTE: don't change the sequence of fields because it's same as 1Password csv export
+#[derive(Debug, Serialize)]
+pub struct Row {
+    title: String,
+    website: String,
+    username: String,
+    password: String,
+    notes: String,
+    expires: String,
+}
 
 pub struct Vault<'a> {
     src: &'a Path,
@@ -40,6 +55,33 @@ impl<'a> Vault<'a> {
         let mut tar = tar::Archive::new(decoder);
 
         tar.unpack(dest)?;
+
+        Ok(())
+    }
+
+    pub fn export(
+        master_pwd: &str,
+        entries: Vec<(String, String)>,
+        dest: &'a Path,
+    ) -> Result<(), KyError> {
+        let mut wtr = Writer::from_path(dest).unwrap();
+
+        for entry in entries.into_iter() {
+            let k = entry.0;
+            let cipher = Cipher::new(master_pwd, &k);
+
+            let v = Value::from(entry.1.as_str());
+
+            wtr.serialize(Row {
+                title: k,
+                website: check_decrypt!(&cipher, &v.url),
+                username: check_decrypt!(&cipher, &v.username),
+                password: check_decrypt!(&cipher, &v.password),
+                notes: check_decrypt!(&cipher, &v.notes),
+                expires: check_decrypt!(&cipher, &v.expires),
+            })
+            .map_err(|x| KyError::Any(x.to_string()))?;
+        }
 
         Ok(())
     }

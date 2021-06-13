@@ -73,14 +73,14 @@ impl Database {
         Ok(is_deleted)
     }
 
-    pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<String>, KyError> {
-        let mut keys = Vec::new();
+    pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<(String, String)>, KyError> {
+        let mut keys: Vec<(String, String)> = Vec::new();
 
         for kv in self.conn.iter(rtxn)? {
-            let (k, _) = kv?;
+            let (k, v) = kv?;
 
             if k != MASTER {
-                keys.push(k.to_string());
+                keys.push((k.to_string(), v.to_string()));
             }
         }
 

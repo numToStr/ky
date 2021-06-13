@@ -1,6 +1,7 @@
 mod add;
 mod backup;
 mod edit;
+mod export;
 mod gen;
 mod git;
 mod init;
@@ -15,8 +16,8 @@ use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
 use self::{
-    add::Add, backup::Backup, edit::Edit, gen::Generate, git::GitCmd, init::Init, ls::Ls,
-    nuke::Nuke, r#move::Move, remove::Remove, restore::Restore, show::Show,
+    add::Add, backup::Backup, edit::Edit, export::Export, gen::Generate, git::GitCmd, init::Init,
+    ls::Ls, nuke::Nuke, r#move::Move, remove::Remove, restore::Restore, show::Show,
 };
 
 pub(self) trait Command {
@@ -68,6 +69,13 @@ pub enum SubCommand {
     /// Rename the key and re-encrypt the entry's details
     #[clap(visible_alias = "mv")]
     Move(Move),
+
+    /// Export vault in decrypted form
+    ///
+    /// CAUTION:
+    /// Exported data files are not encrypted. They are stored in a plain text.
+    /// Anyone with the access to those files will be able to read your password.
+    Export(Export),
 }
 
 impl SubCommand {
@@ -85,6 +93,7 @@ impl SubCommand {
             Self::Nuke(c) => c.exec(config),
             Self::Git(c) => c.exec(config),
             Self::Move(c) => c.exec(config),
+            Self::Export(c) => c.exec(config),
         }
     }
 }

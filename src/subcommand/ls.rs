@@ -36,7 +36,7 @@ impl Command for Ls {
         if keys.is_empty() {
             println!("> No entries found!");
         } else {
-            for key in keys {
+            for (key, _) in keys {
                 println!("- {}", key);
             }
         }
