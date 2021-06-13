@@ -1,6 +1,6 @@
 use super::Config;
 use crate::subcommand::SubCommand;
-use clap::{crate_authors, crate_description, crate_name, crate_version, Clap};
+use clap::{crate_authors, crate_description, crate_name, crate_version, AppSettings, Clap};
 
 #[derive(Clap, Debug)]
 #[clap(
@@ -8,6 +8,7 @@ use clap::{crate_authors, crate_description, crate_name, crate_version, Clap};
     version = crate_version!(),
     author = crate_authors!(),
     about = crate_description!(),
+    setting = AppSettings::DisableVersionForSubcommands
 )]
 pub struct Cli {
     #[clap(flatten)]
