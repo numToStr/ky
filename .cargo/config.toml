@@ -1,6 +1,6 @@
 [alias]
 b = "build --release"
-ii = "install --path ."
+ii = "install --path . --offline"
 
 [target.'cfg(unix)']
 rustflags = ["-C", "link-arg=-s"]
