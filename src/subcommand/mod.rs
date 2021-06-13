@@ -4,6 +4,7 @@ mod edit;
 mod export;
 mod gen;
 mod git;
+mod import;
 mod init;
 mod ls;
 mod r#move;
@@ -16,8 +17,9 @@ use crate::{cli::Config, lib::KyError};
 use clap::Subcommand;
 
 use self::{
-    add::Add, backup::Backup, edit::Edit, export::Export, gen::Generate, git::GitCmd, init::Init,
-    ls::Ls, nuke::Nuke, r#move::Move, remove::Remove, restore::Restore, show::Show,
+    add::Add, backup::Backup, edit::Edit, export::Export, gen::Generate, git::GitCmd,
+    import::Import, init::Init, ls::Ls, nuke::Nuke, r#move::Move, remove::Remove, restore::Restore,
+    show::Show,
 };
 
 pub(self) trait Command {
@@ -70,12 +72,20 @@ pub enum SubCommand {
     #[clap(visible_alias = "mv")]
     Move(Move),
 
-    /// Export vault in decrypted form
+    /// Export data as a csv file containing decrypted data
     ///
     /// CAUTION:
     /// Exported data files are not encrypted. They are stored in a plain text.
     /// Anyone with the access to those files will be able to read your password.
     Export(Export),
+
+    /// Import data from a csv file containing decrypted data
+    ///
+    /// NOTE:
+    /// Data you are importing should be in a clear text format.
+    /// During import, you will be ask for a master password.
+    /// Which will be used to encrypt all of your imported data.
+    Import(Import),
 }
 
 impl SubCommand {
@@ -94,6 +104,7 @@ impl SubCommand {
             Self::Git(c) => c.exec(config),
             Self::Move(c) => c.exec(config),
             Self::Export(c) => c.exec(config),
+            Self::Import(c) => c.exec(config),
         }
     }
 }

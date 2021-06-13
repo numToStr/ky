@@ -14,7 +14,7 @@ macro_rules! check_encrypt {
         use crate::lib::EMPTY;
 
         match $raw {
-            Some(x) if x != EMPTY => Some($cipher.encrypt(&x)?),
+            Some(x) if x != EMPTY && x != "" => Some($cipher.encrypt(&x)?),
             _ => None,
         }
     }};

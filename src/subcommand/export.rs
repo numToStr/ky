@@ -46,6 +46,8 @@ impl Command for Export {
 
         rtxn.commit()?;
 
+        db.close();
+
         let export_path = match &self.path {
             Some(p) => p.to_path_buf(),
             _ => config.csv_path(),
@@ -55,7 +57,7 @@ impl Command for Export {
             return Ok(());
         }
 
-        Vault::export(&master_pwd.to_string(), keys, &export_path)?;
+        Vault::export(&export_path, &master_pwd.to_string(), keys)?;
 
         echo!("> Vault exported: {}", style(export_path.display()).bold());
 

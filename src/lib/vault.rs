@@ -1,12 +1,15 @@
-use super::{KyError, Values};
-use crate::{check_decrypt, lib::Cipher};
-use csv::Writer;
-use serde::Serialize;
+use super::{Database, KyError, Values, MASTER};
+use crate::{
+    check_decrypt, check_encrypt,
+    lib::{Cipher, Password},
+};
+use csv::{Reader, Writer};
+use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
 
 /// Row represent a csv row.
 /// NOTE: don't change the sequence of fields because it's same as 1Password csv export
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Row {
     title: String,
     website: String,
@@ -60,9 +63,9 @@ impl<'a> Vault<'a> {
     }
 
     pub fn export(
+        dest: &'a Path,
         master_pwd: &str,
         entries: Vec<(String, String)>,
-        dest: &'a Path,
     ) -> Result<(), KyError> {
         let mut wtr = Writer::from_path(dest).unwrap();
 
@@ -82,6 +85,37 @@ impl<'a> Vault<'a> {
             })
             .map_err(|x| KyError::Any(x.to_string()))?;
         }
+
+        Ok(())
+    }
+
+    pub fn import(src: &Path, master_pwd: Password, db: &Database) -> Result<(), KyError> {
+        let mut rdr = Reader::from_path(src).unwrap();
+        let iter = rdr.deserialize();
+
+        let mut wtxn = db.write_txn()?;
+
+        db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
+
+        let pwd = master_pwd.to_string();
+
+        for entry in iter.into_iter() {
+            let k: Row = entry.unwrap();
+
+            let cipher = Cipher::new(&pwd, &k.title);
+
+            let val = Values {
+                username: check_encrypt!(cipher, Some(k.username)),
+                password: check_encrypt!(cipher, Some(k.password)),
+                website: check_encrypt!(cipher, Some(k.website)),
+                expires: check_encrypt!(cipher, Some(k.expires)),
+                notes: check_encrypt!(cipher, Some(k.notes)),
+            };
+
+            db.set(&mut wtxn, &k.title, &val.to_string())?;
+        }
+
+        wtxn.commit()?;
 
         Ok(())
     }
