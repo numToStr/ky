@@ -1,4 +1,4 @@
-use super::{KyError, Value};
+use super::{KyError, Values};
 use crate::{check_decrypt, lib::Cipher};
 use csv::Writer;
 use serde::Serialize;
@@ -70,15 +70,15 @@ impl<'a> Vault<'a> {
             let k = entry.0;
             let cipher = Cipher::new(master_pwd, &k);
 
-            let v = Value::from(entry.1.as_str());
+            let val = Values::from(entry.1.as_str());
 
             wtr.serialize(Row {
                 title: k,
-                website: check_decrypt!(&cipher, &v.url),
-                username: check_decrypt!(&cipher, &v.username),
-                password: check_decrypt!(&cipher, &v.password),
-                notes: check_decrypt!(&cipher, &v.notes),
-                expires: check_decrypt!(&cipher, &v.expires),
+                website: check_decrypt!(&cipher, &val.url),
+                username: check_decrypt!(&cipher, &val.username),
+                password: check_decrypt!(&cipher, &val.password),
+                notes: check_decrypt!(&cipher, &val.notes),
+                expires: check_decrypt!(&cipher, &val.expires),
             })
             .map_err(|x| KyError::Any(x.to_string()))?;
         }

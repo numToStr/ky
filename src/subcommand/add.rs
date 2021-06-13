@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -14,8 +14,8 @@ macro_rules! check_encrypt {
         use crate::lib::EMPTY;
 
         match $raw {
-            Some(x) if x != EMPTY => $cipher.encrypt(&x)?,
-            _ => EMPTY.to_string(),
+            Some(x) if x != EMPTY => Some($cipher.encrypt(&x)?),
+            _ => None,
         }
     }};
 }
@@ -63,8 +63,8 @@ impl Command for Add {
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let value = Value {
-            password: cipher.encrypt(&new_pass)?,
+        let val = Values {
+            password: Some(cipher.encrypt(&new_pass)?),
             username: check_encrypt!(cipher, username),
             url: check_encrypt!(cipher, url),
             expires: check_encrypt!(cipher, expires),
@@ -72,7 +72,7 @@ impl Command for Add {
         };
 
         let mut wtxn = db.write_txn()?;
-        db.set(&mut wtxn, &self.key, &value.to_string())?;
+        db.set(&mut wtxn, &self.key, &val.to_string())?;
         wtxn.commit()?;
 
         db.close();

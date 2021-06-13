@@ -3,7 +3,7 @@ use crate::{
     check_db, check_decrypt, check_encrypt,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER, PREFIX},
+    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -50,29 +50,29 @@ impl Command for Edit {
         );
 
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
-        let value = Value::from(encrypted.as_str());
+        let old_val = Values::from(encrypted.as_str());
 
-        let username_decrypted = check_decrypt!(cipher, &value.username);
+        let username_decrypted = check_decrypt!(cipher, &old_val.username);
         let username = Prompt::username_with_default(&theme, username_decrypted)?;
 
-        let url_decrypted = check_decrypt!(cipher, &value.url);
+        let url_decrypted = check_decrypt!(cipher, &old_val.url);
         let url = Prompt::url_with_default(&theme, url_decrypted)?;
 
-        let expires_decrypted = check_decrypt!(cipher, &value.expires);
+        let expires_decrypted = check_decrypt!(cipher, &old_val.expires);
         let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
 
-        let notes_decrypted = check_decrypt!(cipher, &value.notes);
+        let notes_decrypted = check_decrypt!(cipher, &old_val.notes);
         let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
 
         let password = if self.password {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
             println!("{} Password regenerated", style(PREFIX).bold());
-            p
+            Some(p)
         } else {
-            value.password
+            old_val.password
         };
 
-        let new_value = Value {
+        let new_val = Values {
             password,
             username: check_encrypt!(cipher, username),
             url: check_encrypt!(cipher, url),
@@ -82,7 +82,7 @@ impl Command for Edit {
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.key, &new_value.to_string())?;
+        db.set(&mut wtxn, &self.key, &new_val.to_string())?;
 
         wtxn.commit()?;
 

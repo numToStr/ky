@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Values, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -12,10 +12,9 @@ macro_rules! check_decrypt {
     ($cipher: expr, $encypted: expr) => {{
         use crate::lib::EMPTY;
 
-        if $encypted != EMPTY {
-            $cipher.decrypt($encypted)?
-        } else {
-            EMPTY.to_string()
+        match $encypted {
+            Some(x) if x != EMPTY => $cipher.decrypt(&x)?,
+            _ => "".to_string(),
         }
     }};
 }
@@ -66,7 +65,7 @@ impl Command for Show {
 
         db.close();
 
-        let value = Value::from(crypted.as_str());
+        let val = Values::from(crypted.as_str());
 
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
 
@@ -76,7 +75,7 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(check_decrypt!(cipher, &value.password))
+            Some(check_decrypt!(cipher, &val.password))
         } else {
             None
         };
@@ -92,7 +91,7 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Detail("Username", check_decrypt!(cipher, &value.username)),
+            Detail("Username", check_decrypt!(cipher, &val.username)),
             Detail(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
@@ -101,9 +100,9 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("URL", check_decrypt!(cipher, &value.url)),
-            Detail("Expires", check_decrypt!(cipher, &value.expires)),
-            Detail("Notes", check_decrypt!(cipher, &value.notes)),
+            Detail("URL", check_decrypt!(cipher, &val.url)),
+            Detail("Expires", check_decrypt!(cipher, &val.expires)),
+            Detail("Notes", check_decrypt!(cipher, &val.notes)),
         ];
 
         let table = table!(

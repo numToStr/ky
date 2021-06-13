@@ -5,20 +5,27 @@ pub const EMPTY: &str = "-";
 
 #[macro_use]
 macro_rules! create_key {
-    ($k: expr) => {
-        $k.next().unwrap_or(EMPTY).to_string()
-    };
+    ($k: expr) => {{
+        match $k.next() {
+            Some("") => None,
+            Some(x) => Some(x.to_string()),
+            _ => None,
+        }
+    }};
 }
 
-pub struct Value {
-    pub password: String,
-    pub username: String,
-    pub url: String,
-    pub expires: String,
-    pub notes: String,
+type Val = Option<String>;
+
+#[derive(Debug)]
+pub struct Values {
+    pub password: Val,
+    pub username: Val,
+    pub url: Val,
+    pub expires: Val,
+    pub notes: Val,
 }
 
-impl From<&str> for Value {
+impl From<&str> for Values {
     fn from(s: &str) -> Self {
         let mut keys = s.splitn(5, DELIM);
 
@@ -38,16 +45,16 @@ impl From<&str> for Value {
     }
 }
 
-impl Display for Value {
+impl Display for Values {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{d}{}{d}{}{d}{}{d}{}",
-            self.password,
-            self.username,
-            self.url,
-            self.expires,
-            self.notes,
+            self.password.as_deref().unwrap_or_default(),
+            self.username.as_deref().unwrap_or_default(),
+            self.url.as_deref().unwrap_or_default(),
+            self.expires.as_deref().unwrap_or_default(),
+            self.notes.as_deref().unwrap_or_default(),
             d = DELIM,
         )
     }
