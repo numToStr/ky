@@ -22,10 +22,6 @@ pub struct Import {
 
 impl Command for Import {
     fn exec(&self, config: Config) -> Result<(), KyError> {
-        let theme = Prompt::theme();
-
-        let master_pwd = Password::init(&theme)?;
-
         let import_path = match &self.path {
             Some(p) => p.to_path_buf(),
             _ => config.csv_path(),
@@ -35,12 +31,16 @@ impl Command for Import {
             return Err(KyError::BackupDontExist);
         }
 
+        let theme = Prompt::theme();
+
         let db_path = config.db_path();
         let db_exist = db_path.exists();
 
         if !self.ignore && db_exist && !Prompt::vault_exist(&theme)? {
             return Ok(());
         }
+
+        let master_pwd = Password::init(&theme)?;
 
         if db_exist {
             remove_dir_all(&db_path)?;
