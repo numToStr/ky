@@ -54,7 +54,7 @@ impl Command for Add {
         rtxn.commit()?;
 
         let username = Prompt::username(&theme)?;
-        let url = Prompt::url(&theme)?;
+        let website = Prompt::website(&theme)?;
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
@@ -66,7 +66,7 @@ impl Command for Add {
         let val = Values {
             password: Some(cipher.encrypt(&new_pass)?),
             username: check_encrypt!(cipher, username),
-            url: check_encrypt!(cipher, url),
+            website: check_encrypt!(cipher, website),
             expires: check_encrypt!(cipher, expires),
             notes: check_encrypt!(cipher, notes),
         };

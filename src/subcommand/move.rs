@@ -52,7 +52,7 @@ impl Command for Move {
 
         let old_username = check_decrypt!(old_cipher, &old_val.username);
         let old_password = check_decrypt!(old_cipher, &old_val.password);
-        let old_url = check_decrypt!(old_cipher, &old_val.url);
+        let old_website = check_decrypt!(old_cipher, &old_val.website);
         let old_expires = check_decrypt!(old_cipher, &old_val.expires);
         let old_notes = check_decrypt!(old_cipher, &old_val.notes);
 
@@ -61,7 +61,7 @@ impl Command for Move {
         let new_val = Values {
             username: check_encrypt!(new_cipher, Some(old_username)),
             password: check_encrypt!(new_cipher, Some(old_password)),
-            url: check_encrypt!(new_cipher, Some(old_url)),
+            website: check_encrypt!(new_cipher, Some(old_website)),
             expires: check_encrypt!(new_cipher, Some(old_expires)),
             notes: check_encrypt!(new_cipher, Some(old_notes)),
         };

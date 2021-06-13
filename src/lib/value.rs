@@ -20,7 +20,7 @@ type Val = Option<String>;
 pub struct Values {
     pub password: Val,
     pub username: Val,
-    pub url: Val,
+    pub website: Val,
     pub expires: Val,
     pub notes: Val,
 }
@@ -31,14 +31,14 @@ impl From<&str> for Values {
 
         let password = create_key!(keys);
         let username = create_key!(keys);
-        let url = create_key!(keys);
+        let website = create_key!(keys);
         let expires = create_key!(keys);
         let notes = create_key!(keys);
 
         Self {
             password,
             username,
-            url,
+            website,
             expires,
             notes,
         }
@@ -52,7 +52,7 @@ impl Display for Values {
             "{}{d}{}{d}{}{d}{}{d}{}",
             self.password.as_deref().unwrap_or_default(),
             self.username.as_deref().unwrap_or_default(),
-            self.url.as_deref().unwrap_or_default(),
+            self.website.as_deref().unwrap_or_default(),
             self.expires.as_deref().unwrap_or_default(),
             self.notes.as_deref().unwrap_or_default(),
             d = DELIM,

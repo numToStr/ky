@@ -58,7 +58,7 @@ impl Command for Show {
         }
 
         // The crypted data returned from database
-        // Will be in this format password:username:url:expires:notes
+        // Will be in this format password:username:website:expires:notes
         let crypted = db.get(&rtxn, &self.key)?;
 
         rtxn.commit()?;
@@ -100,7 +100,7 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("URL", check_decrypt!(cipher, &val.url)),
+            Detail("Website", check_decrypt!(cipher, &val.website)),
             Detail("Expires", check_decrypt!(cipher, &val.expires)),
             Detail("Notes", check_decrypt!(cipher, &val.notes)),
         ];

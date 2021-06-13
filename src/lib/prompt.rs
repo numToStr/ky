@@ -87,8 +87,8 @@ impl Prompt {
         Self::prompt("Username", theme)
     }
 
-    pub fn url(theme: &impl Theme) -> PromptReturn {
-        Self::prompt("URL", theme)
+    pub fn website(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("Website", theme)
     }
 
     pub fn expires(theme: &impl Theme) -> PromptReturn {
@@ -103,8 +103,8 @@ impl Prompt {
         Self::prompt_with_default("Username", theme, default)
     }
 
-    pub fn url_with_default(theme: &impl Theme, default: String) -> PromptReturn {
-        Self::prompt_with_default("URL", theme, default)
+    pub fn website_with_default(theme: &impl Theme, default: String) -> PromptReturn {
+        Self::prompt_with_default("Website", theme, default)
     }
 
     pub fn expires_with_default(theme: &impl Theme, default: String) -> PromptReturn {

@@ -55,8 +55,8 @@ impl Command for Edit {
         let username_decrypted = check_decrypt!(cipher, &old_val.username);
         let username = Prompt::username_with_default(&theme, username_decrypted)?;
 
-        let url_decrypted = check_decrypt!(cipher, &old_val.url);
-        let url = Prompt::url_with_default(&theme, url_decrypted)?;
+        let website_decrypted = check_decrypt!(cipher, &old_val.website);
+        let website = Prompt::website_with_default(&theme, website_decrypted)?;
 
         let expires_decrypted = check_decrypt!(cipher, &old_val.expires);
         let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
@@ -75,7 +75,7 @@ impl Command for Edit {
         let new_val = Values {
             password,
             username: check_encrypt!(cipher, username),
-            url: check_encrypt!(cipher, url),
+            website: check_encrypt!(cipher, website),
             expires: check_encrypt!(cipher, expires),
             notes: check_encrypt!(cipher, notes),
         };

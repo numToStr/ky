@@ -74,7 +74,7 @@ impl<'a> Vault<'a> {
 
             wtr.serialize(Row {
                 title: k,
-                website: check_decrypt!(&cipher, &val.url),
+                website: check_decrypt!(&cipher, &val.website),
                 username: check_decrypt!(&cipher, &val.username),
                 password: check_decrypt!(&cipher, &val.password),
                 notes: check_decrypt!(&cipher, &val.notes),
