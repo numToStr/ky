@@ -33,7 +33,7 @@ impl Command for Nuke {
 
         db.close();
 
-        if !master_pwd.verify(&hashed) {
+        if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 

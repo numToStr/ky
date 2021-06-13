@@ -37,20 +37,22 @@ impl Password {
 
         let hash = argon
             .hash_password_simple(self.raw.as_bytes(), salt.as_ref())
-            .map_err(|_| KyError::Hashing)?
+            .map_err(|_| KyError::PwdHash)?
             .to_string();
 
         Ok(hash)
     }
 
-    pub fn verify(&self, hash: &str) -> bool {
-        let parsed_hash = PasswordHash::new(hash).unwrap();
+    pub fn verify(&self, hash: &str) -> Result<bool, KyError> {
+        let parsed_hash = PasswordHash::new(hash).map_err(|_| KyError::PwdVerify)?;
 
         let argon = Argon2::default();
 
-        argon
+        let is_verified = argon
             .verify_password(self.raw.as_bytes(), &parsed_hash)
-            .is_ok()
+            .is_ok();
+
+        Ok(is_verified)
     }
 
     pub fn generate(opts: &PasswordParams) -> Self {

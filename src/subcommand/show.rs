@@ -53,7 +53,7 @@ impl Command for Show {
         let rtxn = db.read_txn()?;
         let hashed = db.get(&rtxn, &MASTER)?;
 
-        if !master_pwd.verify(&hashed) {
+        if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 
@@ -81,7 +81,7 @@ impl Command for Show {
         };
 
         if let (true, Some(p)) = (self.qr_code, &password) {
-            let code = Qr::new(&p).render();
+            let code = Qr::new(&p)?.render();
             eprint!("{}", code);
         }
 

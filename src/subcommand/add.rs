@@ -43,7 +43,7 @@ impl Command for Add {
         let rtxn = db.read_txn()?;
         let hashed = db.get(&rtxn, MASTER)?;
 
-        if !master_pwd.verify(&hashed) {
+        if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 

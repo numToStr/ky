@@ -36,7 +36,7 @@ impl Command for Edit {
 
         let hashed = db.get(&rtxn, MASTER)?;
 
-        if !master_pwd.verify(&hashed) {
+        if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 

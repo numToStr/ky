@@ -67,7 +67,7 @@ impl<'a> Vault<'a> {
         master_pwd: &str,
         entries: Vec<(String, String)>,
     ) -> Result<(), KyError> {
-        let mut wtr = Writer::from_path(dest).unwrap();
+        let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
 
         for entry in entries.into_iter() {
             let k = entry.0;
@@ -76,21 +76,21 @@ impl<'a> Vault<'a> {
             let val = Values::from(entry.1.as_str());
 
             wtr.serialize(Row {
-                title: k,
+                title: k.to_string(),
                 website: check_decrypt!(&cipher, &val.website),
                 username: check_decrypt!(&cipher, &val.username),
                 password: check_decrypt!(&cipher, &val.password),
                 notes: check_decrypt!(&cipher, &val.notes),
                 expires: check_decrypt!(&cipher, &val.expires),
             })
-            .map_err(|x| KyError::Any(x.to_string()))?;
+            .map_err(|_| KyError::Export(k))?;
         }
 
         Ok(())
     }
 
     pub fn import(src: &Path, master_pwd: Password, db: &Database) -> Result<(), KyError> {
-        let mut rdr = Reader::from_path(src).unwrap();
+        let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
         let mut wtxn = db.write_txn()?;
@@ -99,8 +99,8 @@ impl<'a> Vault<'a> {
 
         let pwd = master_pwd.to_string();
 
-        for entry in iter.into_iter() {
-            let k: Row = entry.unwrap();
+        for (i, entry) in iter.enumerate() {
+            let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
             let cipher = Cipher::new(&pwd, &k.title);
 

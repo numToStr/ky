@@ -39,7 +39,7 @@ impl Command for Backup {
 
         db.close();
 
-        if !master_pwd.verify(&hashed) {
+        if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 

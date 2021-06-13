@@ -24,7 +24,7 @@ impl Command for Generate {
         let password = Password::generate(&self.pwd_opt);
 
         if self.qr_code {
-            let code = Qr::new(&password.to_string()).render();
+            let code = Qr::new(&password.to_string())?.render();
             eprint!("{}", code);
         }
 

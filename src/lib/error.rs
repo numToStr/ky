@@ -37,7 +37,10 @@ pub enum KyError {
     Delete(String),
     // #endregion
     #[error("Unable to hash the password!")]
-    Hashing,
+    PwdHash,
+
+    #[error("Unable to verify the password. Make sure your password is properly hashed!")]
+    PwdVerify,
 
     #[error("Password mismatch!")]
     MisMatch,
@@ -64,6 +67,24 @@ pub enum KyError {
         "Git default branch is not set. Make sure have added `KY_GIT_BRANCH` environment variable!"
     )]
     GitBranch,
+    // QrCode
+    #[error("Unable to generate qr-code. Make sure your data is valid!")]
+    Qr,
+    // Import/Export
+    #[error("Unable to create the export file!")]
+    ExportCreate,
+
+    #[error("Unable to export data related to {0} key!")]
+    Export(String),
+
+    #[error("Unable to read the import file!")]
+    ImportRead,
+
+    #[error("Unable to import data for row {0}!")]
+    Import(usize),
+
+    #[error("Vault export not found on the provided path!")]
+    RestoreDontExist,
 }
 
 impl From<io::Error> for KyError {

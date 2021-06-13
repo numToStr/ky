@@ -28,7 +28,7 @@ impl Command for Import {
         };
 
         if !import_path.exists() {
-            return Err(KyError::BackupDontExist);
+            return Err(KyError::RestoreDontExist);
         }
 
         let theme = Prompt::theme();
