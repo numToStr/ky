@@ -25,7 +25,7 @@ impl Command for Generate {
 
         if self.qr_code {
             let code = Qr::new(&password.to_string()).render();
-            print!("{}", code);
+            eprint!("{}", code);
         }
 
         if !self.mute {

@@ -83,7 +83,7 @@ impl Command for Show {
 
         if let (true, Some(p)) = (self.qr_code, &password) {
             let code = Qr::new(&p).render();
-            print!("{}", code);
+            eprint!("{}", code);
         }
 
         // If the output is muted then no need to print the table
