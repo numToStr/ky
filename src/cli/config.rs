@@ -67,7 +67,7 @@ impl Config {
 }
 
 /// Options for the auto generated password
-#[derive(Debug, Clone, Clap)]
+#[derive(Debug, Clap)]
 pub struct PasswordParams {
     /// Length of the generated password
     #[clap(short, long, default_value = "20")]
