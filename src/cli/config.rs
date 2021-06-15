@@ -7,9 +7,13 @@ use std::{
 
 #[derive(Clap, Debug)]
 pub struct Config {
-    /// Path to the password vault
-    #[clap(long, name = "path", env = "KY_VAULT")]
+    /// Path to the vault directory
+    #[clap(long, value_name = "path", env = "KY_VAULT_DIR")]
     vault_path: Option<PathBuf>,
+
+    /// Path for the vault backup/export directory
+    #[clap(long, value_name = "path", env = "KY_BACKUP_DIR")]
+    backup_path: Option<PathBuf>,
 
     /// Prompt used inside the session
     #[clap(long, env = "KY_PROMPT", default_value = concat!(crate_name!(), " $"))]
@@ -36,13 +40,19 @@ impl Config {
             .join(concat!(".", crate_name!()))
     }
 
+    pub fn backup_dir(&self) -> PathBuf {
+        self.backup_path
+            .clone()
+            .unwrap_or_else(|| self.ky_home().join("backup"))
+    }
+
     pub fn backup_path(&self) -> PathBuf {
-        self.ensure_create(self.ky_home().join("backup"))
+        self.ensure_create(self.backup_dir())
             .join(concat!(crate_name!(), ".backup"))
     }
 
-    pub fn csv_path(&self) -> PathBuf {
-        self.ensure_create(self.ky_home().join("backup"))
+    pub fn export_path(&self) -> PathBuf {
+        self.ensure_create(self.backup_dir())
             .join(concat!(crate_name!(), ".csv"))
     }
 

@@ -50,7 +50,7 @@ impl Command for Export {
 
         let export_path = match &self.path {
             Some(p) => p.to_path_buf(),
-            _ => config.csv_path(),
+            _ => config.export_path(),
         };
 
         if !self.ignore && export_path.exists() && !Prompt::export_exist(&theme)? {

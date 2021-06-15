@@ -24,7 +24,7 @@ impl Command for Import {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         let import_path = match &self.path {
             Some(p) => p.to_path_buf(),
-            _ => config.csv_path(),
+            _ => config.export_path(),
         };
 
         if !import_path.exists() {
