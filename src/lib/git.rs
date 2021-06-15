@@ -62,7 +62,7 @@ impl<'a> Git<'a> {
                 "-C",
                 &self.target,
                 "commit",
-                "-m",
+                "--message",
                 &format!("backup @ {}", time),
             ])
             .spawn()?
@@ -86,6 +86,20 @@ impl<'a> Git<'a> {
                 &self.branch,
                 if force { "--force" } else { "--no-force" },
             ])
+            .spawn()?
+            .wait()?;
+
+        if !status.success() {
+            return Err(KyError::Git);
+        }
+
+        Ok(self)
+    }
+
+    pub fn clone(self) -> Result<Self, KyError> {
+        let status = self
+            .git()
+            .args(&["clone", &self.repo, &self.target, "--branch", &self.branch])
             .spawn()?
             .wait()?;
 
