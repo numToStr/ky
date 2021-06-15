@@ -28,6 +28,7 @@ pub enum GitCmd {
     Push(GitPush),
 
     /// Restore vault from a git repository
+    #[clap(visible_alias = "clone")]
     Restore(GitRestore),
 }
 
