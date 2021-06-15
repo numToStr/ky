@@ -5,6 +5,7 @@ mod git;
 mod password;
 mod prompt;
 mod qrcode;
+pub mod shell;
 mod tree;
 mod value;
 mod vault;
