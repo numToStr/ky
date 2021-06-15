@@ -188,6 +188,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_generate"
+version = "3.0.0-beta.2"
+source = "git+https://github.com/clap-rs/clap?rev=24f5cd6#24f5cd65558c11898cecf9456ed2acd5933760e4"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "console"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -472,6 +480,7 @@ dependencies = [
  "aes-gcm-siv",
  "argon2",
  "clap",
+ "clap_generate",
  "csv",
  "dialoguer",
  "dirs",
