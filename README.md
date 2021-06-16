@@ -45,10 +45,30 @@ Check out the [release page](https://github.com/numToStr/ky/releases) for prebui
 
 To build `ky`:
 
+-   Setup
+
 ```bash
-$ git clone https://github.com/numToStr/ky
-$ cd ky
-$ cargo build --release
-$ ./target/release/ky --version
-ky 0.0.1
+git clone https://github.com/numToStr/ky
+
+cd ky
+```
+
+-   Running
+
+```bash
+# same as `ky help`
+cargo run -- help
+
+# same as `ky init`
+cargo run -- init
+```
+
+-   Build
+
+```bash
+# debug build
+cargo build
+
+# release build
+cargo build --release
 ```
