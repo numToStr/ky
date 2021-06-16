@@ -35,7 +35,7 @@ pamac build ky
 
 ### Using release binaries (Linux/macOS/Windows)
 
-Check out the [Release page](https://github.com/numToStr/ky/releases) for prebuild binaries for `ky`, available for different operating systems.
+Check out the [release page](https://github.com/numToStr/ky/releases) for prebuild binaries for `ky`, available for different operating systems.
 
 <!-- NOTE: `ky` uses symlinks underneath to manage aliases. So, If you are using **Windows** make sure you have enabled **Developer Mode** or your user has permission to create symlinks. You can read more [here](https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/) -->
 
