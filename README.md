@@ -21,7 +21,7 @@
 
 ### Using `cargo` (Linux/macOS/Windows)
 
--   See #issue
+-   See [#5](https://github.com/numToStr/ky/issues/5)
 
 ### Using `yay` or `pamac` (Arch Linux)
 
