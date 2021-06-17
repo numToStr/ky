@@ -24,8 +24,9 @@ pub enum GitCmd {
     /// Initialize a git repo in the vault directory
     Init(GitInit),
 
-    /// Push the vault to the git repository
-    Push(GitPush),
+    /// Backup the vault to the git repository
+    #[clap(visible_alias = "push")]
+    Backup(GitBackup),
 
     /// Restore vault from a git repository
     #[clap(visible_alias = "clone")]
@@ -36,7 +37,7 @@ impl Command for GitCmd {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         match self {
             Self::Init(c) => c.exec(config),
-            Self::Push(c) => c.exec(config),
+            Self::Backup(c) => c.exec(config),
             Self::Restore(c) => c.exec(config),
         }
     }
@@ -72,7 +73,7 @@ impl Command for GitInit {
 }
 
 #[derive(Debug, Clap)]
-pub struct GitPush {
+pub struct GitBackup {
     /// Force push
     #[clap(short, long)]
     force: bool,
@@ -82,7 +83,7 @@ pub struct GitPush {
     no_commit: bool,
 }
 
-impl Command for GitPush {
+impl Command for GitBackup {
     fn exec(&self, config: Config) -> Result<(), KyError> {
         let db_path = config.db_path();
 
