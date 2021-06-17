@@ -19,11 +19,11 @@
 
 ## 🚀 Installation
 
-### Using `cargo` (Linux/macOS/Windows)
+#### Using `cargo` (Linux/macOS/Windows)
 
 -   See [#5](https://github.com/numToStr/ky/issues/5)
 
-### Using `yay` or `pamac` (Arch Linux)
+#### Using `yay` or `pamac` (Arch Linux)
 
 ```bash
 # Using `yay`
@@ -33,7 +33,7 @@ yay -S ky
 pamac build ky
 ```
 
-### Using release binaries (Linux/macOS/Windows)
+#### Using release binaries (Linux/macOS/Windows)
 
 Check out the [release page](https://github.com/numToStr/ky/releases) for prebuild binaries for `ky`, available for different operating systems.
 
@@ -41,7 +41,7 @@ Check out the [release page](https://github.com/numToStr/ky/releases) for prebui
 
 ## 🤞 Usage
 
-### Global Options/Flags
+#### Global Options/Flags
 
 | Options         | Env Variable    | Description                           |
 | --------------- | --------------- | ------------------------------------- |
@@ -55,7 +55,7 @@ Check out the [release page](https://github.com/numToStr/ky/releases) for prebui
 | `--version` | Prints the version  |
 | `--help`    | Prints the help doc |
 
-### Basics
+#### Basics
 
 -   Initializing the vault (**required**)
 
