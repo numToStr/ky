@@ -145,18 +145,66 @@ ky remove <key>
 ky remove --help
 ```
 
-<!-- backup         Backup the vault -->
-<!-- restore        Restore the vault backup -->
-<!-- export         Export data as a csv file containing decrypted data -->
-<!-- import         Import data from a csv file containing decrypted data -->
+#### Backup/Restore
+
+-   Backup the vault
+
+Sometimes you want to backup the whole vault, maybe to setup the vault on a different machine. You can use `ky backup` optionally providing a path, which will take the whole vault and other required files, compresses as it is and make a backup file to restore at later point in time.
+
+Keep in mind, that the vault data are totally untouched i.e hashed and encrypted. So, all the data like master password and other passwords, will be the same when you restore the backup vault.
+
+```bash
+ky backup # backup vault in the default backup path
+ky backup -p <path> # backup in provided path
+
+# help
+ky backup --help
+```
+
+-   Restore the vault
+
+Backup is done, now you need to restore that backup. Run `ky restore` to restore the vault backup, you can also provide a custom path where the backup is stored. Everything will be restored i.e hashed and encrypted, as it was before the backup like nothing is changed.
+
+```bash
+ky restore # restore from default path
+ky restore -p <path> # restore from the provided path
+
+# help
+ky restore --help
+```
+
+-   Export the vault
+
+Making a decrypted export of your vault is also possible and very easy. Just run `ky export` optionally providing a export path, and now you will have `csv` file with all the data **decrypted** inside it.
+
+Beware that all the data is in clear text and anyone with the access to the export file will be able to read your passwords.
+
+```bash
+ky export # export in the default path
+ky export -p <path> # export in provided path
+
+# help
+ky export --help
+```
+
+-   Import the vault
+
+You can import your exported data or also any `csv` file which is in a certain format. While import, you'll be asked for a master password and all the data will be **encrypted** using the master password and after encrypting, everything will be saved in the vault.
+
+```bash
+ky import # import from the default path
+ky import -p <path> # import from the provided path
+
+# help
+ky import --help
+```
 
 <!-- git            Use git to manage the vault -->
 
-<!-- completions    Generate completions for different shells -->
 <!-- gen            Generate random and cryptographically strong password -->
-
-<!-- help           Prints this message or the help of the given subcommand(s) -->
 <!-- nuke           Permanently delete the local vault -->
+<!-- completions    Generate completions for different shells -->
+<!-- help           Prints this message or the help of the given subcommand(s) -->
 
 ## 🔧 Building
 
