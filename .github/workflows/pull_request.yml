@@ -2,10 +2,9 @@ name: pull_request
 
 on:
     pull_request:
-        paths-ignore:
-            - "LICENSE"
-            - "Makefile"
-            - "README.md"
+        paths:
+            - "src/**"
+            - "tests/**"
         branches:
             - master
 
