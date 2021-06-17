@@ -57,6 +57,10 @@ Check out the [release page](https://github.com/numToStr/ky/releases) for prebui
 
 #### Basics
 
+-   Getting HELP
+
+If you wanna deep dive to undertand every command, options and flags. `ky help` or `ky --help` if your friend. `help` command and `--help` flag is also available for all the subcommands.
+
 -   Initializing the vault (**required**)
 
 Everything is stored in a small [lmdb](https://github.com/LMDB/lmdb) database. Hence, it is required to initialized the vault before saving your password. To initialize the vault run `ky init`. After running this, you will be prompted for a master password, make sure you enter a strong and memorable password, as this will be required for every other action afterwards.
@@ -199,12 +203,104 @@ ky import -p <path> # import from the provided path
 ky import --help
 ```
 
-<!-- git            Use git to manage the vault -->
+#### Git
 
-<!-- gen            Generate random and cryptographically strong password -->
-<!-- nuke           Permanently delete the local vault -->
-<!-- completions    Generate completions for different shells -->
-<!-- help           Prints this message or the help of the given subcommand(s) -->
+`ky` supports `git` as a way to track and making a backup of your vault using a git repository. Which is very useful for backing and restoring your password vault, if you frequently use multiple machines. Although it is not a replacement for `git`, but it depends on git.
+
+To use this feature there are few things to consider:
+
+    1. Git has to be installed on your machine
+    2. Repo name is retrieved from either `KY_GIT_REPO` env variable or `--git-repo` option.
+    3. Similarly, branch name is retrieved from either `KY_GIT_BRANCH` env variable or `--git-branch` option.
+
+Git commands are present under the `ky git` subcommand. So, let have a look at those
+
+```
+# help
+ky git --help
+```
+
+-   Initialize
+
+Just like `git init`, You can run `ky git init` to a initialize a git repository, which initializes and make a first commit. Optionally, you can also push after the first comit.
+
+```bash
+ky git init # init and make first commit
+ky git init -p # init, commit, and push
+
+# help
+ky git init --help
+```
+
+-   Backup
+
+Making backup using git is like pushing your changes, under the hood it uses `git {add,commit,push}`. Run `ky git backup` to commit and push your database changes to the repository.
+
+```bash
+ky git backup # commit and push
+ky git backup -n # don't commit, only push
+
+# help
+ky git backup --help
+```
+
+-   Restore
+
+You can also restore the vault using git, under the hood it uses `git clone`. Run `ky git restore` to clone and restore the vault from the repository.
+
+```bash
+ky git restore
+
+# help
+ky git restore --help
+```
+
+#### Misc
+
+-   Random password
+
+You can also generate a random and cryptographically strong password. Run `ky gen` to generated the password. `ky add` also utilizes the same underlying function to generate the random password.
+
+By default, the length of password is `20` but you can that by passing `--length` option.
+
+```bash
+ky gen # generate 20 char password
+ky gen -l 25 # generate 25 char password
+ky gen -l 25 --qr-code # generate and also print a qr-code
+
+# help
+ky gen --help
+```
+
+-   Deleting vault
+
+DON'T USE THIS. This is just for convenience, if you ever wanted to delete your vault permanently.
+
+```
+ky nuke
+ky nuke --all # delete vault and backups
+```
+
+-   Shell completions
+
+You can generate completions for different shells that are listed below.
+
+```bash
+# For bash
+ky completions bash
+
+# For zsh
+ky completions zsh
+
+# For fish
+ky completions fish
+
+# For Elvish
+ky completions elvish
+
+# Windows Powershell
+ky completions pwsh
+```
 
 ## 🔧 Building
 
@@ -239,3 +335,15 @@ cargo build
 # release build
 cargo build --release
 ```
+
+## 🚗 Roadmap
+
+-   ky-reinit
+-   ky-session
+-   ky-purge
+
+## 💐 Credits
+
+-   [This video](https://youtu.be/w68BBPDAWr8) for giving me idea of how password manager actually works.
+-   [kure](https://github.com/GGP1/kure) for giving a blueprint for the CLI
+-   And, Thanks to all the crates that have used to make this application.
