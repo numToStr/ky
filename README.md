@@ -302,6 +302,10 @@ ky completions elvish
 ky completions pwsh
 ```
 
+## 🤔 How it works?
+
+**TODO**
+
 ## 🔧 Building
 
 `ky` is written in Rust, so you'll need to install the latest Rust toolchain in order to compile it. Visit [rustup.rs](https://rustup.rs/) to download the toolchain.
