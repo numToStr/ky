@@ -59,7 +59,7 @@ Check out the [release page](https://github.com/numToStr/ky/releases) for prebui
 
 -   Initializing the vault (**required**)
 
-Everything is stored in a small [lmdb](https://github.com/LMDB/lmdb) database. Hence, it is required to initialized the database before saving your password. To initialize the database run `ky init`. After running this, you will be prompted for a master password, make sure you enter a strong and memorable password, as this will be required for every other action afterwards.
+Everything is stored in a small [lmdb](https://github.com/LMDB/lmdb) database. Hence, it is required to initialized the vault before saving your password. To initialize the vault run `ky init`. After running this, you will be prompted for a master password, make sure you enter a strong and memorable password, as this will be required for every other action afterwards.
 
 ```bash
 ky init
@@ -70,7 +70,7 @@ ky init --help
 
 -   Adding an entry
 
-So, you want to crate a password, just run `ky add` with a key which will act as a unique id. After that, you will be asked to enter more details like username, website, expiry-date, notes, which are totally optional for now. After recieving all the details, those will be encrypted with master password and saved into the database.
+So, you want to create/add a password, just run `ky add` with a key which will act as a unique id. After that, you will be asked to enter more details like username, website, expiry-date, notes, which are totally optional for now. After recieving all the details, those will be encrypted with master password and saved into the vault.
 
 Remember, password will be auto generated and encrypted with the rest of the details.
 
@@ -112,14 +112,44 @@ ky edit <key> # edit details and also regenerate password
 ky edit --help
 ```
 
-<!-- list           Print a tree view of all keys present in the vault [aliases: ls] -->
-<!-- move           Rename the key and re-encrypt the entry's details [aliases: mv] -->
-<!-- remove         Remove an entry from the vault [aliases: rm] -->
+-   List all the entry
+
+Just run `ky list` to list all the entries saved in the vault. This will only show you the keys without touching the details associated with the respective key.
+
+```bash
+ky list
+
+# help
+ky list --help
+```
+
+-   Renaming the key
+
+For some reason you want to change the key or you made some type and you want to fix that. Run `ky move` provided with old key and new key. Your data will be decrypted using old key and re-encrypted using the new key combined with the master password, and saved in the vault.
+
+```bash
+ky move <old_key> <new_key>
+
+# help
+ky move --help
+```
+
+-   Deleting an entry
+
+If you no longer needed a saved password, then run `ky remove` provided with the key to remove the entry from the vault. This action is permanent.
+
+```bash
+ky remove <key>
+
+# help
+ky remove --help
+```
 
 <!-- backup         Backup the vault -->
 <!-- restore        Restore the vault backup -->
 <!-- export         Export data as a csv file containing decrypted data -->
 <!-- import         Import data from a csv file containing decrypted data -->
+
 <!-- git            Use git to manage the vault -->
 
 <!-- completions    Generate completions for different shells -->
