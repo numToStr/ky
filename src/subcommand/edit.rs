@@ -70,10 +70,10 @@ impl Command for Edit {
 
         let new_val = Value {
             password,
-            username: username.unwrap_or_default(),
-            website: website.unwrap_or_default(),
-            expires: expires.unwrap_or_default(),
-            notes: notes.unwrap_or_default(),
+            username,
+            website,
+            expires,
+            notes,
         }
         .encrypt(&cipher)?;
 

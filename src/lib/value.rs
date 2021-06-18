@@ -2,16 +2,18 @@ use super::{Cipher, KyError};
 use std::fmt::{self, Display, Formatter};
 
 pub const DELIM: char = ':';
-pub const EMPTY: &str = "-";
 
 #[macro_use]
 macro_rules! dehexed {
     ($k: expr) => {{
         match $k.next() {
-            Some("" | EMPTY) => "".to_string(),
             Some(x) => {
-                let dehexed = hex::decode(x).map_err(|_| crate::lib::KyError::Decrypt)?;
-                String::from_utf8_lossy(&dehexed).to_string()
+                if x == "" {
+                    x.to_string()
+                } else {
+                    let dehexed = hex::decode(x).map_err(|_| crate::lib::KyError::Decrypt)?;
+                    String::from_utf8_lossy(&dehexed).to_string()
+                }
             }
             _ => "".to_string(),
         }
@@ -22,7 +24,7 @@ macro_rules! dehexed {
 macro_rules! hexed {
     ($k: expr) => {{
         match $k.as_str() {
-            "" | EMPTY => "".to_string(),
+            "" => $k.to_string(),
             x => hex::encode(x),
         }
     }};

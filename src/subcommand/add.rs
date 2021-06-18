@@ -54,10 +54,10 @@ impl Command for Add {
 
         let encrypted = Value {
             password: new_pass,
-            username: username.unwrap_or_default(),
-            website: website.unwrap_or_default(),
-            expires: expires.unwrap_or_default(),
-            notes: notes.unwrap_or_default(),
+            username,
+            website,
+            expires,
+            notes,
         }
         .encrypt(&cipher)?;
 

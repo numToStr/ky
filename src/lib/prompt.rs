@@ -7,8 +7,9 @@ use dialoguer::{
 use std::io;
 
 pub const PREFIX: char = '~';
+pub const EMPTY: &str = "-";
 
-type PromptReturn = Result<Option<String>, KyError>;
+type PromptReturn = Result<String, KyError>;
 
 pub struct Prompt;
 
@@ -35,12 +36,12 @@ impl Prompt {
             .allow_empty(true)
             .interact_text()?;
 
-        let new_input = match input.as_ref() {
-            "" => None,
-            x => Some(x.to_string()),
+        let new_input = match input.as_str() {
+            EMPTY => "",
+            x => x,
         };
 
-        Ok(new_input)
+        Ok(new_input.to_string())
     }
 
     fn prompt(title: &str, theme: &impl Theme) -> PromptReturn {
@@ -49,12 +50,12 @@ impl Prompt {
             .allow_empty(true)
             .interact_text()?;
 
-        let new_input = match input.as_ref() {
-            "" => None,
-            x => Some(x.to_string()),
+        let new_input = match input.as_str() {
+            EMPTY => "",
+            x => x,
         };
 
-        Ok(new_input)
+        Ok(new_input.to_string())
     }
 
     #[inline]
