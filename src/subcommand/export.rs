@@ -57,7 +57,7 @@ impl Command for Export {
             return Ok(());
         }
 
-        Vault::export(&export_path, &master_pwd.to_string(), keys)?;
+        Vault::export(&export_path, &master_pwd, keys)?;
 
         echo!("> Vault exported: {}", style(export_path.display()).bold());
 

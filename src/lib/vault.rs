@@ -61,18 +61,19 @@ impl<'a> Vault<'a> {
 
     pub fn export(
         dest: &'a Path,
-        master_pwd: &str,
+        master_pwd: &Password,
         entries: Vec<(String, String)>,
     ) -> Result<(), KyError> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
+        let key_cipher = Cipher::for_key(master_pwd);
 
-        for entry in entries.into_iter() {
-            let k = entry.0;
-            let cipher = Cipher::new(master_pwd, &k);
-            let val = Value::decrypt(&cipher, entry.1.as_str())?;
+        for (k, v) in entries.into_iter() {
+            let key = key_cipher.decrypt(&k)?;
+            let cipher = Cipher::for_value(master_pwd, &key);
+            let val = Value::decrypt(&cipher, &v)?;
 
             wtr.serialize(Row {
-                title: k.to_string(),
+                title: key,
                 website: val.website,
                 username: val.username,
                 password: cipher.decrypt(&val.password)?,
@@ -85,7 +86,7 @@ impl<'a> Vault<'a> {
         Ok(())
     }
 
-    pub fn import(src: &Path, master_pwd: Password, db: &Database) -> Result<(), KyError> {
+    pub fn import(src: &Path, master_pwd: &Password, db: &Database) -> Result<(), KyError> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
@@ -93,12 +94,12 @@ impl<'a> Vault<'a> {
 
         db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
 
-        let pwd = master_pwd.to_string();
+        let key_cipher = Cipher::for_key(&master_pwd);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::new(&pwd, &k.title);
+            let cipher = Cipher::for_value(&master_pwd, &k.title);
 
             let val = Value {
                 username: k.username,
@@ -109,7 +110,9 @@ impl<'a> Vault<'a> {
             }
             .encrypt(&cipher)?;
 
-            db.set(&mut wtxn, &k.title, &val.to_string())?;
+            let key = key_cipher.encrypt(&k.title)?;
+
+            db.set(&mut wtxn, &key, &val.to_string())?;
         }
 
         wtxn.commit()?;

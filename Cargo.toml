@@ -27,6 +27,7 @@ qrcodegen = "1.6.0"
 heed = { version = "0.11.0", default-features = false, features = ["lmdb"] }
 csv = "1.1.6"
 serde = { version = "1.0.126", features = ["derive"] }
+hkdf = "0.11.0"
 
 [profile.dev]
 debug = 0

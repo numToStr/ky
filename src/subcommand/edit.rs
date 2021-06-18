@@ -40,7 +40,9 @@ impl Command for Edit {
             return Err(KyError::MisMatch);
         }
 
-        let encrypted = db.get(&rtxn, &self.key)?;
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+
+        let encrypted = db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
@@ -49,7 +51,7 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key);
 
         let old_val = Value::decrypt(&cipher, &encrypted)?;
 
@@ -77,7 +79,7 @@ impl Command for Edit {
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.key, &new_val.to_string())?;
+        db.set(&mut wtxn, &key, &new_val)?;
 
         wtxn.commit()?;
 

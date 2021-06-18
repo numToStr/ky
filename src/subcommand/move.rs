@@ -35,24 +35,28 @@ impl Command for Move {
             return Err(KyError::MisMatch);
         }
 
+        let key_cipher = Cipher::for_key(&master_pwd);
+
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let encrypted = db.get(&rtxn, &self.old_key)?;
+        let old_key = key_cipher.encrypt(&self.old_key)?;
+        let encrypted = db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
-        if db.get(&rtxn, &self.new_key).is_ok() {
+        let new_key = key_cipher.encrypt(&self.new_key)?;
+        if db.get(&rtxn, &new_key).is_ok() {
             return Err(KyError::Exist(self.new_key.to_string()));
         }
 
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_cipher = Cipher::new(&master_pwd.to_string(), &self.old_key);
+        let old_cipher = Cipher::for_value(&master_pwd, &self.old_key);
 
         let old_val = Value::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::new(&master_pwd.to_string(), &self.new_key);
+        let new_cipher = Cipher::for_value(&master_pwd, &self.new_key);
         let new_val = Value {
             password: old_cipher.decrypt(&old_val.password)?,
             username: old_val.username,
@@ -64,8 +68,8 @@ impl Command for Move {
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.new_key, &new_val)?;
-        db.delete(&mut wtxn, &self.old_key)?;
+        db.set(&mut wtxn, &new_key, &new_val)?;
+        db.delete(&mut wtxn, &old_key)?;
 
         wtxn.commit()?;
 

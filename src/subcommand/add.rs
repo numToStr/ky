@@ -35,7 +35,9 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        if db.get(&rtxn, &self.key).is_ok() {
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+
+        if db.get(&rtxn, &key).is_ok() {
             return Err(KyError::Exist(self.key.to_string()));
         }
 
@@ -46,8 +48,7 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let enc_key = master_pwd.to_string();
-        let cipher = Cipher::new(&enc_key, &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key);
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
@@ -62,7 +63,7 @@ impl Command for Add {
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.key, &encrypted)?;
+        db.set(&mut wtxn, &key, &encrypted)?;
 
         wtxn.commit()?;
 

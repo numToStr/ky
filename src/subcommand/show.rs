@@ -45,15 +45,17 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
-        let encrypted = db.get(&rtxn, &self.key)?;
+        let encrypted = db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
         db.close();
 
-        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key);
 
         let val = Value::decrypt(&cipher, &encrypted)?;
 
