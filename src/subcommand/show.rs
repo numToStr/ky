@@ -2,22 +2,10 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Values, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
-
-#[macro_export]
-macro_rules! check_decrypt {
-    ($cipher: expr, $encypted: expr) => {{
-        use crate::lib::EMPTY;
-
-        match $encypted {
-            Some(x) if x != EMPTY => $cipher.decrypt(&x)?,
-            _ => "".to_string(),
-        }
-    }};
-}
 
 #[derive(Tabled)]
 struct Detail(&'static str, String);
@@ -59,15 +47,15 @@ impl Command for Show {
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
-        let crypted = db.get(&rtxn, &self.key)?;
+        let encrypted = db.get(&rtxn, &self.key)?;
 
         rtxn.commit()?;
 
         db.close();
 
-        let val = Values::from(crypted.as_str());
-
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
+
+        let val = Value::decrypt(&cipher, &encrypted)?;
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value
@@ -75,7 +63,7 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(check_decrypt!(cipher, &val.password))
+            Some(cipher.decrypt(&val.password)?)
         } else {
             None
         };
@@ -91,7 +79,7 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Detail("Username", check_decrypt!(cipher, &val.username)),
+            Detail("Username", val.username),
             Detail(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
@@ -100,9 +88,9 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("Website", check_decrypt!(cipher, &val.website)),
-            Detail("Expires", check_decrypt!(cipher, &val.expires)),
-            Detail("Notes", check_decrypt!(cipher, &val.notes)),
+            Detail("Website", val.website),
+            Detail("Expires", val.expires),
+            Detail("Notes", val.notes),
         ];
 
         let table = table!(

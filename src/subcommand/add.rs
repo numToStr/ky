@@ -3,22 +3,10 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
-
-#[macro_export]
-macro_rules! check_encrypt {
-    ($cipher: expr, $raw: expr) => {{
-        use crate::lib::EMPTY;
-
-        match $raw {
-            Some(x) if x != EMPTY && x != "" => Some($cipher.encrypt(&x)?),
-            _ => None,
-        }
-    }};
-}
 
 #[derive(Debug, Clap)]
 pub struct Add {
@@ -63,16 +51,19 @@ impl Command for Add {
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let val = Values {
-            password: Some(cipher.encrypt(&new_pass)?),
-            username: check_encrypt!(cipher, username),
-            website: check_encrypt!(cipher, website),
-            expires: check_encrypt!(cipher, expires),
-            notes: check_encrypt!(cipher, notes),
-        };
+        let encrypted = Value {
+            password: new_pass,
+            username: username.unwrap_or_default(),
+            website: website.unwrap_or_default(),
+            expires: expires.unwrap_or_default(),
+            notes: notes.unwrap_or_default(),
+        }
+        .encrypt(&cipher)?;
 
         let mut wtxn = db.write_txn()?;
-        db.set(&mut wtxn, &self.key, &val.to_string())?;
+
+        db.set(&mut wtxn, &self.key, &encrypted)?;
+
         wtxn.commit()?;
 
         db.close();

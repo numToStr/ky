@@ -1,9 +1,9 @@
 use super::Command;
 use crate::{
-    check_db, check_decrypt, check_encrypt,
+    check_db,
     cli::Config,
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -37,7 +37,7 @@ impl Command for Move {
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let value = db.get(&rtxn, &self.old_key)?;
+        let encrypted = db.get(&rtxn, &self.old_key)?;
 
         // now check if the new key exists or not
         if db.get(&rtxn, &self.new_key).is_ok() {
@@ -47,28 +47,24 @@ impl Command for Move {
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_val = Values::from(value.as_ref());
         let old_cipher = Cipher::new(&master_pwd.to_string(), &self.old_key);
 
-        let old_username = check_decrypt!(old_cipher, &old_val.username);
-        let old_password = check_decrypt!(old_cipher, &old_val.password);
-        let old_website = check_decrypt!(old_cipher, &old_val.website);
-        let old_expires = check_decrypt!(old_cipher, &old_val.expires);
-        let old_notes = check_decrypt!(old_cipher, &old_val.notes);
+        let old_val = Value::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
         let new_cipher = Cipher::new(&master_pwd.to_string(), &self.new_key);
-        let new_val = Values {
-            username: check_encrypt!(new_cipher, Some(old_username)),
-            password: check_encrypt!(new_cipher, Some(old_password)),
-            website: check_encrypt!(new_cipher, Some(old_website)),
-            expires: check_encrypt!(new_cipher, Some(old_expires)),
-            notes: check_encrypt!(new_cipher, Some(old_notes)),
-        };
+        let new_val = Value {
+            password: old_cipher.decrypt(&old_val.password)?,
+            username: old_val.username,
+            website: old_val.website,
+            expires: old_val.expires,
+            notes: old_val.notes,
+        }
+        .encrypt(&new_cipher)?;
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.new_key, &new_val.to_string())?;
+        db.set(&mut wtxn, &self.new_key, &new_val)?;
         db.delete(&mut wtxn, &self.old_key)?;
 
         wtxn.commit()?;

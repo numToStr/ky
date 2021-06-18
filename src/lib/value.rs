@@ -1,60 +1,93 @@
+use super::{Cipher, KyError};
 use std::fmt::{self, Display, Formatter};
 
 pub const DELIM: char = ':';
 pub const EMPTY: &str = "-";
 
 #[macro_use]
-macro_rules! create_key {
+macro_rules! dehexed {
     ($k: expr) => {{
         match $k.next() {
-            Some("") => None,
-            Some(x) => Some(x.to_string()),
-            _ => None,
+            Some("" | EMPTY) => "".to_string(),
+            Some(x) => {
+                let dehexed = hex::decode(x).map_err(|_| crate::lib::KyError::Decrypt)?;
+                String::from_utf8_lossy(&dehexed).to_string()
+            }
+            _ => "".to_string(),
         }
     }};
 }
 
-type Val = Option<String>;
-
-#[derive(Debug)]
-pub struct Values {
-    pub password: Val,
-    pub username: Val,
-    pub website: Val,
-    pub expires: Val,
-    pub notes: Val,
+#[macro_use]
+macro_rules! hexed {
+    ($k: expr) => {{
+        match $k.as_str() {
+            "" | EMPTY => "".to_string(),
+            x => hex::encode(x),
+        }
+    }};
 }
 
-impl From<&str> for Values {
-    fn from(s: &str) -> Self {
-        let mut keys = s.splitn(5, DELIM);
+#[derive(Debug)]
+pub struct Value {
+    pub password: String,
+    pub username: String,
+    pub website: String,
+    pub expires: String,
+    pub notes: String,
+}
 
-        let password = create_key!(keys);
-        let username = create_key!(keys);
-        let website = create_key!(keys);
-        let expires = create_key!(keys);
-        let notes = create_key!(keys);
+impl Value {
+    pub fn encrypt(&self, cipher: &Cipher) -> Result<String, KyError> {
+        let password = hexed!(cipher.encrypt(&self.password)?);
+        let username = hexed!(self.username);
+        let website = hexed!(self.website);
+        let expires = hexed!(self.expires);
+        let notes = hexed!(self.notes);
 
-        Self {
+        let val = Value {
             password,
             username,
             website,
             expires,
             notes,
         }
+        .to_string();
+
+        cipher.encrypt(&val)
+    }
+
+    pub fn decrypt(cipher: &Cipher, encrypted: &str) -> Result<Self, KyError> {
+        let decrypted = cipher.decrypt(&encrypted)?;
+
+        let mut keys = decrypted.splitn(5, DELIM);
+
+        let password = dehexed!(keys);
+        let username = dehexed!(keys);
+        let website = dehexed!(keys);
+        let expires = dehexed!(keys);
+        let notes = dehexed!(keys);
+
+        Ok(Self {
+            password,
+            username,
+            website,
+            expires,
+            notes,
+        })
     }
 }
 
-impl Display for Values {
+impl Display for Value {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{d}{}{d}{}{d}{}{d}{}",
-            self.password.as_deref().unwrap_or_default(),
-            self.username.as_deref().unwrap_or_default(),
-            self.website.as_deref().unwrap_or_default(),
-            self.expires.as_deref().unwrap_or_default(),
-            self.notes.as_deref().unwrap_or_default(),
+            self.password,
+            self.username,
+            self.website,
+            self.expires,
+            self.notes,
             d = DELIM,
         )
     }

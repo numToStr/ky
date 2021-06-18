@@ -1,8 +1,5 @@
-use super::{Database, KyError, Values, MASTER};
-use crate::{
-    check_decrypt, check_encrypt,
-    lib::{Cipher, Password},
-};
+use super::{Database, KyError, Value, MASTER};
+use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
@@ -72,16 +69,15 @@ impl<'a> Vault<'a> {
         for entry in entries.into_iter() {
             let k = entry.0;
             let cipher = Cipher::new(master_pwd, &k);
-
-            let val = Values::from(entry.1.as_str());
+            let val = Value::decrypt(&cipher, entry.1.as_str())?;
 
             wtr.serialize(Row {
                 title: k.to_string(),
-                website: check_decrypt!(&cipher, &val.website),
-                username: check_decrypt!(&cipher, &val.username),
-                password: check_decrypt!(&cipher, &val.password),
-                notes: check_decrypt!(&cipher, &val.notes),
-                expires: check_decrypt!(&cipher, &val.expires),
+                website: val.website,
+                username: val.username,
+                password: cipher.decrypt(&val.password)?,
+                notes: val.notes,
+                expires: val.expires,
             })
             .map_err(|_| KyError::Export(k))?;
         }
@@ -104,13 +100,14 @@ impl<'a> Vault<'a> {
 
             let cipher = Cipher::new(&pwd, &k.title);
 
-            let val = Values {
-                username: check_encrypt!(cipher, Some(k.username)),
-                password: check_encrypt!(cipher, Some(k.password)),
-                website: check_encrypt!(cipher, Some(k.website)),
-                expires: check_encrypt!(cipher, Some(k.expires)),
-                notes: check_encrypt!(cipher, Some(k.notes)),
-            };
+            let val = Value {
+                username: k.username,
+                password: k.password,
+                website: k.website,
+                expires: k.expires,
+                notes: k.notes,
+            }
+            .encrypt(&cipher)?;
 
             db.set(&mut wtxn, &k.title, &val.to_string())?;
         }

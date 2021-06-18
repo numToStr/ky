@@ -1,9 +1,9 @@
 use super::Command;
 use crate::{
-    check_db, check_decrypt, check_encrypt,
+    check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER, PREFIX},
+    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -50,35 +50,30 @@ impl Command for Edit {
         );
 
         let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
-        let old_val = Values::from(encrypted.as_str());
 
-        let username_decrypted = check_decrypt!(cipher, &old_val.username);
-        let username = Prompt::username_with_default(&theme, username_decrypted)?;
+        let old_val = Value::decrypt(&cipher, &encrypted)?;
 
-        let website_decrypted = check_decrypt!(cipher, &old_val.website);
-        let website = Prompt::website_with_default(&theme, website_decrypted)?;
-
-        let expires_decrypted = check_decrypt!(cipher, &old_val.expires);
-        let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
-
-        let notes_decrypted = check_decrypt!(cipher, &old_val.notes);
-        let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
+        let username = Prompt::username_with_default(&theme, old_val.username)?;
+        let website = Prompt::website_with_default(&theme, old_val.website)?;
+        let expires = Prompt::expires_with_default(&theme, old_val.expires)?;
+        let notes = Prompt::notes_with_default(&theme, old_val.notes)?;
 
         let password = if self.password {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
             println!("{} Password regenerated", style(PREFIX).bold());
-            Some(p)
+            p
         } else {
-            old_val.password
+            cipher.decrypt(&old_val.password)?
         };
 
-        let new_val = Values {
+        let new_val = Value {
             password,
-            username: check_encrypt!(cipher, username),
-            website: check_encrypt!(cipher, website),
-            expires: check_encrypt!(cipher, expires),
-            notes: check_encrypt!(cipher, notes),
-        };
+            username: username.unwrap_or_default(),
+            website: website.unwrap_or_default(),
+            expires: expires.unwrap_or_default(),
+            notes: notes.unwrap_or_default(),
+        }
+        .encrypt(&cipher)?;
 
         let mut wtxn = db.write_txn()?;
 
