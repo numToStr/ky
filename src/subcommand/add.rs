@@ -48,7 +48,7 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 

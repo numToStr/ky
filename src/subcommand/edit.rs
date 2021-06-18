@@ -51,7 +51,7 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
         let old_val = Value::decrypt(&cipher, &encrypted)?;
 

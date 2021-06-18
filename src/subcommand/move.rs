@@ -51,12 +51,12 @@ impl Command for Move {
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_cipher = Cipher::for_value(&master_pwd, &self.old_key);
+        let old_cipher = Cipher::for_value(&master_pwd, &self.old_key)?;
 
         let old_val = Value::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::for_value(&master_pwd, &self.new_key);
+        let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
         let new_val = Value {
             password: old_cipher.decrypt(&old_val.password)?,
             username: old_val.username,

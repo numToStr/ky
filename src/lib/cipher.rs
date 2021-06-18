@@ -13,11 +13,16 @@ pub struct Cipher {
 
 impl Cipher {
     #[inline]
-    fn make_key<const T: usize>(master: &[u8], key: &[u8], data: &[u8]) -> [u8; T] {
+    fn make_key<const T: usize>(
+        master: &[u8],
+        key: &[u8],
+        data: &[u8],
+    ) -> Result<[u8; T], KyError> {
         let h = Hkdf::<Sha256>::new(Some(key), master);
         let mut okm = [0u8; T];
-        h.expand(data, &mut okm).unwrap();
-        okm
+        h.expand(data, &mut okm)
+            .map_err(|e| KyError::Any(e.to_string()))?;
+        Ok(okm)
     }
 
     pub fn for_key(master: &Password) -> Self {
@@ -32,23 +37,23 @@ impl Cipher {
         Self { cipher, nonce }
     }
 
-    pub fn for_value(master: &Password, key: &str) -> Self {
+    pub fn for_value(master: &Password, key: &str) -> Result<Self, KyError> {
         let m = master.to_string();
         let master_bytes = m.as_bytes();
         let key_bytes = key.as_bytes();
 
-        let first_pass = Self::make_key::<256>(master_bytes, key_bytes, &[]);
-        let second_pass = Self::make_key::<256>(master_bytes, key_bytes, &first_pass);
-        let third_pass = Self::make_key::<32>(&first_pass, &second_pass, master_bytes);
+        let first_pass = Self::make_key::<256>(master_bytes, key_bytes, &[])?;
+        let second_pass = Self::make_key::<256>(master_bytes, key_bytes, &first_pass)?;
+        let third_pass = Self::make_key::<32>(&first_pass, &second_pass, master_bytes)?;
 
         let master_key = Key::from_slice(&third_pass);
         let cipher = Aes256GcmSiv::new(master_key);
 
-        let nonce_secret = Self::make_key::<12>(&second_pass, &first_pass, &key_bytes);
+        let nonce_secret = Self::make_key::<12>(&second_pass, &first_pass, &key_bytes)?;
 
         let nonce = Nonce::from_slice(&nonce_secret).to_owned();
 
-        Self { cipher, nonce }
+        Ok(Self { cipher, nonce })
     }
 
     pub fn encrypt(&self, data: &str) -> Result<String, KyError> {

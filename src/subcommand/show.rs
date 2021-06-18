@@ -55,7 +55,7 @@ impl Command for Show {
 
         db.close();
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
         let val = Value::decrypt(&cipher, &encrypted)?;
 

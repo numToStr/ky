@@ -7,7 +7,7 @@ use std::{fs::File, path::Path};
 /// Row represent a csv row.
 /// NOTE: don't change the sequence of fields because it's same as 1Password csv export
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Row {
+struct Row {
     title: String,
     website: String,
     username: String,
@@ -69,7 +69,7 @@ impl<'a> Vault<'a> {
 
         for (k, v) in entries.into_iter() {
             let key = key_cipher.decrypt(&k)?;
-            let cipher = Cipher::for_value(master_pwd, &key);
+            let cipher = Cipher::for_value(master_pwd, &key)?;
             let val = Value::decrypt(&cipher, &v)?;
 
             wtr.serialize(Row {
@@ -99,7 +99,7 @@ impl<'a> Vault<'a> {
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::for_value(&master_pwd, &k.title);
+            let cipher = Cipher::for_value(&master_pwd, &k.title)?;
 
             let val = Value {
                 username: k.username,
