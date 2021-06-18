@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -53,11 +53,11 @@ impl Command for Move {
         echo!("- Decrypting old details...");
         let old_cipher = Cipher::for_value(&master_pwd, &self.old_key)?;
 
-        let old_val = Value::decrypt(&old_cipher, &encrypted)?;
+        let old_val = Details::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
         let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
-        let new_val = Value {
+        let new_val = Details {
             password: old_cipher.decrypt(&old_val.password)?,
             username: old_val.username,
             website: old_val.website,

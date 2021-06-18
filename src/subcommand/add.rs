@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER},
+    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -52,7 +52,7 @@ impl Command for Add {
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let encrypted = Value {
+        let encrypted = Details {
             password: new_pass,
             username,
             website,

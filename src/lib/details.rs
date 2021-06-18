@@ -31,7 +31,7 @@ macro_rules! hexed {
 }
 
 #[derive(Debug)]
-pub struct Value {
+pub struct Details {
     pub password: String,
     pub username: String,
     pub website: String,
@@ -39,7 +39,7 @@ pub struct Value {
     pub notes: String,
 }
 
-impl Value {
+impl Details {
     pub fn encrypt(&self, cipher: &Cipher) -> Result<String, KyError> {
         let password = hexed!(cipher.encrypt(&self.password)?);
         let username = hexed!(self.username);
@@ -47,7 +47,7 @@ impl Value {
         let expires = hexed!(self.expires);
         let notes = hexed!(self.notes);
 
-        let val = Value {
+        let val = Details {
             password,
             username,
             website,
@@ -80,7 +80,7 @@ impl Value {
     }
 }
 
-impl Display for Value {
+impl Display for Details {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,

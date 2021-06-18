@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Value, MASTER, PREFIX},
+    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -53,7 +53,7 @@ impl Command for Edit {
 
         let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let old_val = Value::decrypt(&cipher, &encrypted)?;
+        let old_val = Details::decrypt(&cipher, &encrypted)?;
 
         let username = Prompt::username_with_default(&theme, old_val.username)?;
         let website = Prompt::website_with_default(&theme, old_val.website)?;
@@ -68,7 +68,7 @@ impl Command for Edit {
             cipher.decrypt(&old_val.password)?
         };
 
-        let new_val = Value {
+        let new_val = Details {
             password,
             username,
             website,

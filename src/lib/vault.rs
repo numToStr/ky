@@ -1,4 +1,4 @@
-use super::{Database, KyError, Value, MASTER};
+use super::{Database, Details, KyError, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -70,7 +70,7 @@ impl<'a> Vault<'a> {
         for (k, v) in entries.into_iter() {
             let key = key_cipher.decrypt(&k)?;
             let cipher = Cipher::for_value(master_pwd, &key)?;
-            let val = Value::decrypt(&cipher, &v)?;
+            let val = Details::decrypt(&cipher, &v)?;
 
             wtr.serialize(Row {
                 title: key,
@@ -101,7 +101,7 @@ impl<'a> Vault<'a> {
 
             let cipher = Cipher::for_value(&master_pwd, &k.title)?;
 
-            let val = Value {
+            let val = Details {
                 username: k.username,
                 password: k.password,
                 website: k.website,

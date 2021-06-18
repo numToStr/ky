@@ -2,13 +2,13 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Value, MASTER},
+    lib::{Cipher, Database, Details, KyError, Password, Prompt, Qr, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
 
 #[derive(Tabled)]
-struct Detail(&'static str, String);
+struct Tr(&'static str, String);
 
 #[derive(Debug, Clap)]
 pub struct Show {
@@ -57,7 +57,7 @@ impl Command for Show {
 
         let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let val = Value::decrypt(&cipher, &encrypted)?;
+        let val = Details::decrypt(&cipher, &encrypted)?;
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value
@@ -81,8 +81,8 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Detail("Username", val.username),
-            Detail(
+            Tr("Username", val.username),
+            Tr(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
                     p
@@ -90,9 +90,9 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("Website", val.website),
-            Detail("Expires", val.expires),
-            Detail("Notes", val.notes),
+            Tr("Website", val.website),
+            Tr("Expires", val.expires),
+            Tr("Notes", val.notes),
         ];
 
         let table = table!(
