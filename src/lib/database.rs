@@ -1,6 +1,9 @@
 use super::{KyError, MASTER};
 use heed::{types::Str, Database as Mdbx, Env, EnvOpenOptions, RoTxn, RwTxn};
-use std::path::Path;
+use std::{
+    fmt::{self, Display, Formatter},
+    path::Path,
+};
 
 /// Just a check to ensure that the database exist before connecting
 #[macro_export]
@@ -14,6 +17,19 @@ macro_rules! check_db {
 
 type DatabaseType = Mdbx<Str, Str>;
 
+/// KyTable is a collection of all the table names
+enum KyTable {
+    Password,
+}
+
+impl Display for KyTable {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Password => f.write_str("password"),
+        }
+    }
+}
+
 pub struct Database {
     env: Env,
     conn: DatabaseType,
@@ -22,11 +38,16 @@ pub struct Database {
 impl Database {
     pub fn open(path: &Path) -> Result<Self, KyError> {
         let env = EnvOpenOptions::new()
+            .max_dbs(5)
             .open(path)
             .map_err(|_| KyError::Connection)?;
 
+        let table = KyTable::Password.to_string();
+
         // we will open the default unamed database
-        let conn: DatabaseType = env.create_database(None).map_err(|_| KyError::Connection)?;
+        let conn: DatabaseType = env
+            .create_database(Some(&table))
+            .map_err(|_| KyError::Connection)?;
 
         Ok(Self { env, conn })
     }
