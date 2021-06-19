@@ -1,10 +1,13 @@
 [package]
 name = "ky"
-description = "Simple and Secure password manager written in rust"
+description = "Simple and Secure password manager"
 version = "0.0.1"
 authors = ["Vikas Raj <sudo@vikasraj.dev>"]
 edition = "2018"
+homepage = "https://github.com/numToStr/ky"
+repository = "https://github.com/numToStr/ky"
 license = "MIT"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
