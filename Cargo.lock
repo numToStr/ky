@@ -507,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "ky"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
