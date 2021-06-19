@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Rename `git push` to `git backup` [#6](https://github.com/numToStr/ky/pull/6)
 -   New encryption and hashing strategy [#8](https://github.com/numToStr/ky/pull/8)
+-   Connect to a named database instead of default [#9](https://github.com/numToStr/ky/pull/9)
 
 ## [0.0.1] - 2020-06-15
 
