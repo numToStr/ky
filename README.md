@@ -302,9 +302,9 @@ ky completions elvish
 ky completions pwsh
 ```
 
-## 🤔 How it works?
-
-**TODO**
+<!-- ## 🤔 How it works? -->
+<!--  -->
+<!-- **TODO** -->
 
 ## 🔧 Building
 
