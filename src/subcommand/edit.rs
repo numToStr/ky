@@ -1,9 +1,9 @@
 use super::Command;
 use crate::{
-    check_db, check_decrypt, check_encrypt,
+    check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER, PREFIX},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,7 +11,7 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Edit {
     /// Entry which needs to be edited
-    key: String,
+    key: EntryKey,
 
     /// Allow password to be regenerated
     #[clap(short, long)]
@@ -40,7 +40,9 @@ impl Command for Edit {
             return Err(KyError::MisMatch);
         }
 
-        let encrypted = db.get(&rtxn, &self.key)?;
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+
+        let encrypted = db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
@@ -49,46 +51,41 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
-        let old_val = Values::from(encrypted.as_str());
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let username_decrypted = check_decrypt!(cipher, &old_val.username);
-        let username = Prompt::username_with_default(&theme, username_decrypted)?;
+        let old_val = Details::decrypt(&cipher, &encrypted)?;
 
-        let website_decrypted = check_decrypt!(cipher, &old_val.website);
-        let website = Prompt::website_with_default(&theme, website_decrypted)?;
-
-        let expires_decrypted = check_decrypt!(cipher, &old_val.expires);
-        let expires = Prompt::expires_with_default(&theme, expires_decrypted)?;
-
-        let notes_decrypted = check_decrypt!(cipher, &old_val.notes);
-        let notes = Prompt::notes_with_default(&theme, notes_decrypted)?;
+        let username = Prompt::username_with_default(&theme, old_val.username)?;
+        let website = Prompt::website_with_default(&theme, old_val.website)?;
+        let expires = Prompt::expires_with_default(&theme, old_val.expires)?;
+        let notes = Prompt::notes_with_default(&theme, old_val.notes)?;
 
         let password = if self.password {
             let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
             println!("{} Password regenerated", style(PREFIX).bold());
-            Some(p)
+            p
         } else {
-            old_val.password
+            cipher.decrypt(&old_val.password)?
         };
 
-        let new_val = Values {
+        let new_val = Details {
             password,
-            username: check_encrypt!(cipher, username),
-            website: check_encrypt!(cipher, website),
-            expires: check_encrypt!(cipher, expires),
-            notes: check_encrypt!(cipher, notes),
-        };
+            username,
+            website,
+            expires,
+            notes,
+        }
+        .encrypt(&cipher)?;
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.key, &new_val.to_string())?;
+        db.set(&mut wtxn, &key, &new_val)?;
 
         wtxn.commit()?;
 
         db.close();
 
-        echo!("> Entry edited: {}", style(&self.key).bold());
+        echo!("> Entry edited: {}", style(&self.key.as_ref()).bold());
 
         Ok(())
     }

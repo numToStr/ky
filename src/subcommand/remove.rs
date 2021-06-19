@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,7 +11,7 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Remove {
     /// Entry which needs to be deleted
-    key: String,
+    key: EntryKey,
 }
 
 impl Command for Remove {
@@ -32,8 +32,10 @@ impl Command for Remove {
             return Err(KyError::MisMatch);
         }
 
-        if db.get(&rtxn, &self.key).is_err() {
-            return Err(KyError::NotFound(self.key.to_string()));
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+
+        if db.get(&rtxn, &key).is_err() {
+            return Err(KyError::NotFound(self.key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
@@ -41,9 +43,9 @@ impl Command for Remove {
         if Prompt::proceed(&theme)? {
             let mut wtxn = db.write_txn()?;
 
-            db.delete(&mut wtxn, &self.key)?;
+            db.delete(&mut wtxn, &key)?;
 
-            echo!("> Entry deleted: {}", style(&self.key).bold());
+            echo!("> Entry deleted: {}", style(&self.key.as_ref()).bold());
 
             wtxn.commit()?;
         }

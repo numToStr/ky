@@ -1,9 +1,9 @@
 use super::Command;
 use crate::{
-    check_db, check_decrypt, check_encrypt,
+    check_db,
     cli::Config,
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,10 +11,10 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Move {
     /// Current name of the key
-    old_key: String,
+    old_key: EntryKey,
 
     /// New name for the key
-    new_key: String,
+    new_key: EntryKey,
 }
 
 impl Command for Move {
@@ -35,41 +35,41 @@ impl Command for Move {
             return Err(KyError::MisMatch);
         }
 
+        let key_cipher = Cipher::for_key(&master_pwd);
+
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let value = db.get(&rtxn, &self.old_key)?;
+        let old_key = key_cipher.encrypt(&self.old_key.as_ref())?;
+        let encrypted = db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
-        if db.get(&rtxn, &self.new_key).is_ok() {
-            return Err(KyError::Exist(self.new_key.to_string()));
+        let new_key = key_cipher.encrypt(&self.new_key.as_ref())?;
+        if db.get(&rtxn, &new_key).is_ok() {
+            return Err(KyError::Exist(self.new_key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_val = Values::from(value.as_ref());
-        let old_cipher = Cipher::new(&master_pwd.to_string(), &self.old_key);
+        let old_cipher = Cipher::for_value(&master_pwd, &self.old_key)?;
 
-        let old_username = check_decrypt!(old_cipher, &old_val.username);
-        let old_password = check_decrypt!(old_cipher, &old_val.password);
-        let old_website = check_decrypt!(old_cipher, &old_val.website);
-        let old_expires = check_decrypt!(old_cipher, &old_val.expires);
-        let old_notes = check_decrypt!(old_cipher, &old_val.notes);
+        let old_val = Details::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::new(&master_pwd.to_string(), &self.new_key);
-        let new_val = Values {
-            username: check_encrypt!(new_cipher, Some(old_username)),
-            password: check_encrypt!(new_cipher, Some(old_password)),
-            website: check_encrypt!(new_cipher, Some(old_website)),
-            expires: check_encrypt!(new_cipher, Some(old_expires)),
-            notes: check_encrypt!(new_cipher, Some(old_notes)),
-        };
+        let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
+        let new_val = Details {
+            password: old_cipher.decrypt(&old_val.password)?,
+            username: old_val.username,
+            website: old_val.website,
+            expires: old_val.expires,
+            notes: old_val.notes,
+        }
+        .encrypt(&new_cipher)?;
 
         let mut wtxn = db.write_txn()?;
 
-        db.set(&mut wtxn, &self.new_key, &new_val.to_string())?;
-        db.delete(&mut wtxn, &self.old_key)?;
+        db.set(&mut wtxn, &new_key, &new_val)?;
+        db.delete(&mut wtxn, &old_key)?;
 
         wtxn.commit()?;
 
@@ -77,8 +77,8 @@ impl Command for Move {
 
         echo!(
             "> Entry moved: {} -> {}",
-            style(&self.old_key).bold(),
-            style(&self.new_key).bold()
+            style(&self.old_key.as_ref()).bold(),
+            style(&self.new_key.as_ref()).bold()
         );
 
         Ok(())

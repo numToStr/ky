@@ -3,27 +3,15 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, KyError, Password, Prompt, Values, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
 
-#[macro_export]
-macro_rules! check_encrypt {
-    ($cipher: expr, $raw: expr) => {{
-        use crate::lib::EMPTY;
-
-        match $raw {
-            Some(x) if x != EMPTY && x != "" => Some($cipher.encrypt(&x)?),
-            _ => None,
-        }
-    }};
-}
-
 #[derive(Debug, Clap)]
 pub struct Add {
     /// Unique key for the entry
-    key: String,
+    key: EntryKey,
 
     #[clap(flatten)]
     pwd_opt: PasswordParams,
@@ -47,8 +35,10 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        if db.get(&rtxn, &self.key).is_ok() {
-            return Err(KyError::Exist(self.key.to_string()));
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+
+        if db.get(&rtxn, &key).is_ok() {
+            return Err(KyError::Exist(self.key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
@@ -58,26 +48,28 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let enc_key = master_pwd.to_string();
-        let cipher = Cipher::new(&enc_key, &self.key);
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
         let new_pass = Password::generate(&self.pwd_opt).to_string();
 
-        let val = Values {
-            password: Some(cipher.encrypt(&new_pass)?),
-            username: check_encrypt!(cipher, username),
-            website: check_encrypt!(cipher, website),
-            expires: check_encrypt!(cipher, expires),
-            notes: check_encrypt!(cipher, notes),
-        };
+        let encrypted = Details {
+            password: new_pass,
+            username,
+            website,
+            expires,
+            notes,
+        }
+        .encrypt(&cipher)?;
 
         let mut wtxn = db.write_txn()?;
-        db.set(&mut wtxn, &self.key, &val.to_string())?;
+
+        db.set(&mut wtxn, &key, &encrypted)?;
+
         wtxn.commit()?;
 
         db.close();
 
-        echo!("> Entry added: {}", style(&self.key).bold());
+        echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
 
         Ok(())
     }

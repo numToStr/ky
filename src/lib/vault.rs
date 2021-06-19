@@ -1,8 +1,5 @@
-use super::{Database, KyError, Values, MASTER};
-use crate::{
-    check_decrypt, check_encrypt,
-    lib::{Cipher, Password},
-};
+use super::{key::EntryKey, Database, Details, KyError, MASTER};
+use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
@@ -10,8 +7,8 @@ use std::{fs::File, path::Path};
 /// Row represent a csv row.
 /// NOTE: don't change the sequence of fields because it's same as 1Password csv export
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Row {
-    title: String,
+struct Row {
+    title: EntryKey,
     website: String,
     username: String,
     password: String,
@@ -64,32 +61,33 @@ impl<'a> Vault<'a> {
 
     pub fn export(
         dest: &'a Path,
-        master_pwd: &str,
+        master_pwd: &Password,
         entries: Vec<(String, String)>,
     ) -> Result<(), KyError> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
+        let key_cipher = Cipher::for_key(master_pwd);
 
-        for entry in entries.into_iter() {
-            let k = entry.0;
-            let cipher = Cipher::new(master_pwd, &k);
-
-            let val = Values::from(entry.1.as_str());
+        for (k, v) in entries.into_iter() {
+            let key = key_cipher.decrypt(&k.as_ref())?.into();
+            let cipher = Cipher::for_value(master_pwd, &key)?;
+            let val = Details::decrypt(&cipher, &v)?;
+            let key_ref = key.as_ref().to_string();
 
             wtr.serialize(Row {
-                title: k.to_string(),
-                website: check_decrypt!(&cipher, &val.website),
-                username: check_decrypt!(&cipher, &val.username),
-                password: check_decrypt!(&cipher, &val.password),
-                notes: check_decrypt!(&cipher, &val.notes),
-                expires: check_decrypt!(&cipher, &val.expires),
+                title: key,
+                website: val.website,
+                username: val.username,
+                password: cipher.decrypt(&val.password)?,
+                notes: val.notes,
+                expires: val.expires,
             })
-            .map_err(|_| KyError::Export(k))?;
+            .map_err(|_| KyError::Export(key_ref))?;
         }
 
         Ok(())
     }
 
-    pub fn import(src: &Path, master_pwd: Password, db: &Database) -> Result<(), KyError> {
+    pub fn import(src: &Path, master_pwd: &Password, db: &Database) -> Result<(), KyError> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
@@ -97,22 +95,25 @@ impl<'a> Vault<'a> {
 
         db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
 
-        let pwd = master_pwd.to_string();
+        let key_cipher = Cipher::for_key(&master_pwd);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::new(&pwd, &k.title);
+            let cipher = Cipher::for_value(&master_pwd, &k.title)?;
 
-            let val = Values {
-                username: check_encrypt!(cipher, Some(k.username)),
-                password: check_encrypt!(cipher, Some(k.password)),
-                website: check_encrypt!(cipher, Some(k.website)),
-                expires: check_encrypt!(cipher, Some(k.expires)),
-                notes: check_encrypt!(cipher, Some(k.notes)),
-            };
+            let val = Details {
+                username: k.username,
+                password: k.password,
+                website: k.website,
+                expires: k.expires,
+                notes: k.notes,
+            }
+            .encrypt(&cipher)?;
 
-            db.set(&mut wtxn, &k.title, &val.to_string())?;
+            let key = key_cipher.encrypt(&k.title.as_ref())?;
+
+            db.set(&mut wtxn, &key, &val.to_string())?;
         }
 
         wtxn.commit()?;

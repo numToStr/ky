@@ -1,9 +1,14 @@
 use super::KyError;
 use crate::cli::PasswordParams;
-use argon2::{password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{
+    password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier, Version,
+};
 use dialoguer::theme::Theme;
 use rand::{rngs::OsRng, thread_rng, Rng};
 use std::fmt::{self, Display, Formatter};
+
+const ITR: u32 = 3;
+const MEM: u32 = 1024 * 128; // 128MB
 
 const CHARSET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
@@ -31,9 +36,12 @@ impl Password {
     }
 
     pub fn hash(&self) -> Result<String, KyError> {
+        let pll = num_cpus::get() as u32;
         let salt = SaltString::generate(&mut OsRng);
 
-        let argon = Argon2::default();
+        // TODO: first arg can be replace by a key file
+        let argon = Argon2::new(None, ITR, MEM, pll, Version::default())
+            .map_err(|e| KyError::Any(e.to_string()))?;
 
         let hash = argon
             .hash_password_simple(self.raw.as_bytes(), salt.as_ref())

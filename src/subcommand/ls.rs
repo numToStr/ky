@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -36,7 +36,10 @@ impl Command for Ls {
         if keys.is_empty() {
             println!("> No entries found!");
         } else {
+            let key_cipher = Cipher::for_key(&master_pwd);
+
             for (key, _) in keys {
+                let key = key_cipher.decrypt(&key)?;
                 println!("- {}", key);
             }
         }

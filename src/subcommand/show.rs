@@ -2,30 +2,18 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, Qr, Values, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, Qr, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
 
-#[macro_export]
-macro_rules! check_decrypt {
-    ($cipher: expr, $encypted: expr) => {{
-        use crate::lib::EMPTY;
-
-        match $encypted {
-            Some(x) if x != EMPTY => $cipher.decrypt(&x)?,
-            _ => "".to_string(),
-        }
-    }};
-}
-
 #[derive(Tabled)]
-struct Detail(&'static str, String);
+struct Tr(&'static str, String);
 
 #[derive(Debug, Clap)]
 pub struct Show {
     /// Entry which need to be shown
-    key: String,
+    key: EntryKey,
 
     /// Show password in clear text
     #[clap(short = 'C', long)]
@@ -57,17 +45,19 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
-        let crypted = db.get(&rtxn, &self.key)?;
+        let encrypted = db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
         db.close();
 
-        let val = Values::from(crypted.as_str());
+        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let cipher = Cipher::new(&master_pwd.to_string(), &self.key);
+        let val = Details::decrypt(&cipher, &encrypted)?;
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value
@@ -75,7 +65,7 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(check_decrypt!(cipher, &val.password))
+            Some(cipher.decrypt(&val.password)?)
         } else {
             None
         };
@@ -91,8 +81,8 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Detail("Username", check_decrypt!(cipher, &val.username)),
-            Detail(
+            Tr("Username", val.username),
+            Tr(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
                     p
@@ -100,9 +90,9 @@ impl Command for Show {
                     "*".repeat(15)
                 },
             ),
-            Detail("Website", check_decrypt!(cipher, &val.website)),
-            Detail("Expires", check_decrypt!(cipher, &val.expires)),
-            Detail("Notes", check_decrypt!(cipher, &val.notes)),
+            Tr("Website", val.website),
+            Tr("Expires", val.expires),
+            Tr("Notes", val.notes),
         ];
 
         let table = table!(

@@ -48,7 +48,7 @@ impl Command for Import {
 
         let db = Database::open(config.ensure_create(&db_path))?;
 
-        Vault::import(&import_path, master_pwd, &db)?;
+        Vault::import(&import_path, &master_pwd, &db)?;
 
         db.close();
 
