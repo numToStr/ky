@@ -3,6 +3,7 @@ mod database;
 mod details;
 mod error;
 mod git;
+pub mod key;
 mod password;
 mod prompt;
 mod qrcode;

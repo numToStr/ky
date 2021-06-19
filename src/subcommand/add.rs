@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,7 +11,7 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Add {
     /// Unique key for the entry
-    key: String,
+    key: EntryKey,
 
     #[clap(flatten)]
     pwd_opt: PasswordParams,
@@ -35,10 +35,10 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
         if db.get(&rtxn, &key).is_ok() {
-            return Err(KyError::Exist(self.key.to_string()));
+            return Err(KyError::Exist(self.key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
@@ -69,7 +69,7 @@ impl Command for Add {
 
         db.close();
 
-        echo!("> Entry added: {}", style(&self.key).bold());
+        echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
 
         Ok(())
     }

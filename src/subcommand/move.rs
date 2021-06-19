@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,10 +11,10 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Move {
     /// Current name of the key
-    old_key: String,
+    old_key: EntryKey,
 
     /// New name for the key
-    new_key: String,
+    new_key: EntryKey,
 }
 
 impl Command for Move {
@@ -39,13 +39,13 @@ impl Command for Move {
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let old_key = key_cipher.encrypt(&self.old_key)?;
+        let old_key = key_cipher.encrypt(&self.old_key.as_ref())?;
         let encrypted = db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
-        let new_key = key_cipher.encrypt(&self.new_key)?;
+        let new_key = key_cipher.encrypt(&self.new_key.as_ref())?;
         if db.get(&rtxn, &new_key).is_ok() {
-            return Err(KyError::Exist(self.new_key.to_string()));
+            return Err(KyError::Exist(self.new_key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
@@ -77,8 +77,8 @@ impl Command for Move {
 
         echo!(
             "> Entry moved: {} -> {}",
-            style(&self.old_key).bold(),
-            style(&self.new_key).bold()
+            style(&self.old_key.as_ref()).bold(),
+            style(&self.new_key.as_ref()).bold()
         );
 
         Ok(())

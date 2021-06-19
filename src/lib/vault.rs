@@ -1,4 +1,4 @@
-use super::{Database, Details, KyError, MASTER};
+use super::{key::EntryKey, Database, Details, KyError, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use std::{fs::File, path::Path};
 /// NOTE: don't change the sequence of fields because it's same as 1Password csv export
 #[derive(Debug, Serialize, Deserialize)]
 struct Row {
-    title: String,
+    title: EntryKey,
     website: String,
     username: String,
     password: String,
@@ -68,9 +68,10 @@ impl<'a> Vault<'a> {
         let key_cipher = Cipher::for_key(master_pwd);
 
         for (k, v) in entries.into_iter() {
-            let key = key_cipher.decrypt(&k)?;
+            let key = key_cipher.decrypt(&k.as_ref())?.into();
             let cipher = Cipher::for_value(master_pwd, &key)?;
             let val = Details::decrypt(&cipher, &v)?;
+            let key_ref = key.as_ref().to_string();
 
             wtr.serialize(Row {
                 title: key,
@@ -80,7 +81,7 @@ impl<'a> Vault<'a> {
                 notes: val.notes,
                 expires: val.expires,
             })
-            .map_err(|_| KyError::Export(k))?;
+            .map_err(|_| KyError::Export(key_ref))?;
         }
 
         Ok(())
@@ -110,7 +111,7 @@ impl<'a> Vault<'a> {
             }
             .encrypt(&cipher)?;
 
-            let key = key_cipher.encrypt(&k.title)?;
+            let key = key_cipher.encrypt(&k.title.as_ref())?;
 
             db.set(&mut wtxn, &key, &val.to_string())?;
         }

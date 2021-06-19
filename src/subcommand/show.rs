@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, Details, KyError, Password, Prompt, Qr, MASTER},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, Qr, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -13,7 +13,7 @@ struct Tr(&'static str, String);
 #[derive(Debug, Clap)]
 pub struct Show {
     /// Entry which need to be shown
-    key: String,
+    key: EntryKey,
 
     /// Show password in clear text
     #[clap(short = 'C', long)]
@@ -45,7 +45,7 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes

@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{Cipher, Database, Details, KyError, Password, Prompt, MASTER, PREFIX},
+    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER, PREFIX},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -11,7 +11,7 @@ use dialoguer::console::style;
 #[derive(Debug, Clap)]
 pub struct Edit {
     /// Entry which needs to be edited
-    key: String,
+    key: EntryKey,
 
     /// Allow password to be regenerated
     #[clap(short, long)]
@@ -40,7 +40,7 @@ impl Command for Edit {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key)?;
+        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
         let encrypted = db.get(&rtxn, &key)?;
 
@@ -85,7 +85,7 @@ impl Command for Edit {
 
         db.close();
 
-        echo!("> Entry edited: {}", style(&self.key).bold());
+        echo!("> Entry edited: {}", style(&self.key.as_ref()).bold());
 
         Ok(())
     }

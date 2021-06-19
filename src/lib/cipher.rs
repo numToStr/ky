@@ -1,4 +1,4 @@
-use super::{KyError, Password};
+use super::{key::EntryKey, KyError, Password};
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
@@ -37,10 +37,10 @@ impl Cipher {
         Self { cipher, nonce }
     }
 
-    pub fn for_value(master: &Password, key: &str) -> Result<Self, KyError> {
+    pub fn for_value(master: &Password, key: &EntryKey) -> Result<Self, KyError> {
         let m = master.to_string();
         let master_bytes = m.as_bytes();
-        let key_bytes = key.as_bytes();
+        let key_bytes = key.as_ref().as_bytes();
 
         let first_pass = Self::make_key::<256>(master_bytes, key_bytes, &[])?;
         let second_pass = Self::make_key::<256>(master_bytes, key_bytes, &first_pass)?;
