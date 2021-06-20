@@ -3,7 +3,9 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER, PREFIX},
+    lib::{
+        key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER, PREFIX,
+    },
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -30,11 +32,14 @@ impl Command for Edit {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
+        let master_db = env.get_table(KyTable::Master)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
 
-        let hashed = db.get(&rtxn, MASTER)?;
+        let rtxn = env.read_txn()?;
+
+        let hashed = master_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -42,7 +47,7 @@ impl Command for Edit {
 
         let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
-        let encrypted = db.get(&rtxn, &key)?;
+        let encrypted = pwd_db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
@@ -77,13 +82,13 @@ impl Command for Edit {
         }
         .encrypt(&cipher)?;
 
-        let mut wtxn = db.write_txn()?;
+        let mut wtxn = env.write_txn()?;
 
-        db.set(&mut wtxn, &key, &new_val)?;
+        pwd_db.set(&mut wtxn, &key, &new_val)?;
 
         wtxn.commit()?;
 
-        db.close();
+        env.close();
 
         echo!("> Entry edited: {}", style(&self.key.as_ref()).bold());
 
