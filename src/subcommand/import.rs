@@ -1,7 +1,7 @@
 use crate::{
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, Vault},
+    lib::{KyEnv, KyError, Password, Prompt, Vault},
 };
 use clap::Clap;
 
@@ -46,11 +46,11 @@ impl Command for Import {
             remove_dir_all(&db_path)?;
         }
 
-        let db = Database::open(config.ensure_create(&db_path))?;
+        let env = KyEnv::connect(config.ensure_create(&db_path))?;
 
-        Vault::import(&import_path, &master_pwd, &db)?;
+        Vault::import(&import_path, &master_pwd, &env)?;
 
-        db.close();
+        env.close();
 
         echo!("> Vault imported!");
 
