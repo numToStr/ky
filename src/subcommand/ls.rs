@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Database, KyError, Password, Prompt, MASTER},
+    lib::{Cipher, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -18,17 +18,20 @@ impl Command for Ls {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
+        let master_db = env.get_table(KyTable::Master)?;
+        let password_db = env.get_table(KyTable::Password)?;
 
-        let hashed = db.get(&rtxn, MASTER)?;
+        let rtxn = env.read_txn()?;
+
+        let hashed = master_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 
-        let keys = db.ls(&rtxn)?;
+        let keys = password_db.ls(&rtxn)?;
 
         rtxn.commit()?;
 
@@ -44,7 +47,7 @@ impl Command for Ls {
             }
         }
 
-        db.close();
+        env.close();
 
         Ok(())
     }
