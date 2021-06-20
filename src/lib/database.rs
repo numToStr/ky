@@ -38,6 +38,7 @@ pub struct KyDb {
 }
 
 impl KyDb {
+    /// Returns a new connection to a database from provided env and name
     pub fn new(env: &Env, name: &KyTable) -> Result<Self, KyError> {
         let db: KyDbType = env
             .create_database(Some(&name.to_string()))
@@ -46,6 +47,7 @@ impl KyDb {
         Ok(Self { db })
     }
 
+    /// Insert a key-val pair into the databse
     pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> Result<(), KyError> {
         let res = self
             .db
@@ -55,6 +57,7 @@ impl KyDb {
         Ok(res)
     }
 
+    /// Retrieve a key-val pair from the databse
     pub fn get(&self, rtxn: &RoTxn, key: &str) -> Result<String, KyError> {
         let bytes = self
             .db
@@ -67,6 +70,7 @@ impl KyDb {
         }
     }
 
+    /// Delete a key-val pair from the databse
     pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> Result<bool, KyError> {
         let is_deleted = self
             .db
@@ -76,6 +80,7 @@ impl KyDb {
         Ok(is_deleted)
     }
 
+    /// Retrieve all the key-val pair in the databse
     pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<(String, String)>, KyError> {
         let mut keys: Vec<(String, String)> = Vec::new();
 
@@ -97,6 +102,7 @@ pub struct KyEnv {
 }
 
 impl KyEnv {
+    /// Connects to new lmdb environment
     pub fn connect(path: &Path) -> Result<Self, KyError> {
         let env = EnvOpenOptions::new()
             .max_dbs(5)
@@ -106,22 +112,26 @@ impl KyEnv {
         Ok(Self { env })
     }
 
+    /// Returns a database connection
     pub fn get_table(&self, name: KyTable) -> Result<KyDb, KyError> {
         KyDb::new(&self.env, &name)
     }
 
+    /// Returns a write-read transaction
     pub fn write_txn(&self) -> Result<RwTxn, KyError> {
         let wtxn = self.env.write_txn()?;
 
         Ok(wtxn)
     }
 
+    /// Returns a read-only transaction
     pub fn read_txn(&self) -> Result<RoTxn, KyError> {
         let rtxn = self.env.read_txn()?;
 
         Ok(rtxn)
     }
 
+    /// Closes the open connection
     pub fn close(self) {
         self.env.prepare_for_closing().wait();
     }
