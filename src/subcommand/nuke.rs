@@ -26,10 +26,10 @@ impl Command for Nuke {
         let master_pwd = Password::ask_master(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
-        let master_db = env.get_table(KyTable::Master)?;
+        let common_db = env.get_table(KyTable::Common)?;
 
         let rtxn = env.read_txn()?;
-        let hashed = master_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, MASTER)?;
         rtxn.commit()?;
 
         env.close();

@@ -19,14 +19,16 @@ type KyDbType = Mdbx<Str, Str>;
 
 /// KyTable is a collection of all the table names
 pub enum KyTable {
-    Master,
+    /// Common table to store common data across multiple tables ie. master password
+    Common,
+    /// Password table where all the passwords are stored
     Password,
 }
 
 impl Display for KyTable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Master => f.write_str("master"),
+            Self::Common => f.write_str("common"),
             Self::Password => f.write_str("password"),
         }
     }

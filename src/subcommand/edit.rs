@@ -34,12 +34,12 @@ impl Command for Edit {
 
         let env = KyEnv::connect(&db_path)?;
 
-        let master_db = env.get_table(KyTable::Master)?;
+        let common_db = env.get_table(KyTable::Common)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
 
-        let hashed = master_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);

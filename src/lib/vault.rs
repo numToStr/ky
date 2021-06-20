@@ -92,12 +92,12 @@ impl<'a> Vault<'a> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
-        let master_db = env.get_table(KyTable::Master)?;
+        let common_db = env.get_table(KyTable::Common)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let mut wtxn = env.write_txn()?;
 
-        master_db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
+        common_db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
 
         let key_cipher = Cipher::for_key(&master_pwd);
 

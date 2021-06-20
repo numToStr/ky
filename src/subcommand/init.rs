@@ -23,11 +23,11 @@ impl Command for Init {
 
         let env = KyEnv::connect(config.ensure_create(&db_path))?;
 
-        let master_db = env.get_table(KyTable::Master)?;
+        let common_db = env.get_table(KyTable::Common)?;
 
         let mut txn = env.write_txn()?;
 
-        master_db.set(&mut txn, MASTER, &hashed)?;
+        common_db.set(&mut txn, MASTER, &hashed)?;
 
         txn.commit()?;
 

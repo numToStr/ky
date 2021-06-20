@@ -20,18 +20,18 @@ impl Command for Ls {
 
         let env = KyEnv::connect(&db_path)?;
 
-        let master_db = env.get_table(KyTable::Master)?;
-        let password_db = env.get_table(KyTable::Password)?;
+        let common_db = env.get_table(KyTable::Common)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
 
-        let hashed = master_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 
-        let keys = password_db.ls(&rtxn)?;
+        let keys = pwd_db.ls(&rtxn)?;
 
         rtxn.commit()?;
 
