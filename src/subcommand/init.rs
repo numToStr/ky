@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -21,17 +21,19 @@ impl Command for Init {
 
         let hashed = password.hash()?;
 
-        let db = Database::open(config.ensure_create(&db_path))?;
+        let env = KyEnv::connect(config.ensure_create(&db_path))?;
 
-        let mut txn = db.write_txn()?;
+        let master_db = env.get_table(KyTable::Master)?;
 
-        db.set(&mut txn, MASTER, &hashed)?;
+        let mut txn = env.write_txn()?;
+
+        master_db.set(&mut txn, MASTER, &hashed)?;
 
         txn.commit()?;
 
         echo!("> Vault Initiliazed!");
 
-        db.close();
+        env.close();
 
         Ok(())
     }
