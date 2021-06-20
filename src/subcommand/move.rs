@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -25,11 +25,14 @@ impl Command for Move {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
+        let master_db = env.get_table(KyTable::Master)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
 
-        let hashed = db.get(&rtxn, MASTER)?;
+        let rtxn = env.read_txn()?;
+
+        let hashed = master_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -40,11 +43,11 @@ impl Command for Move {
         // first check if the old key exist or not
         // If exist, then retrieve the value
         let old_key = key_cipher.encrypt(&self.old_key.as_ref())?;
-        let encrypted = db.get(&rtxn, &old_key)?;
+        let encrypted = pwd_db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
         let new_key = key_cipher.encrypt(&self.new_key.as_ref())?;
-        if db.get(&rtxn, &new_key).is_ok() {
+        if pwd_db.get(&rtxn, &new_key).is_ok() {
             return Err(KyError::Exist(self.new_key.as_ref().to_string()));
         }
 
@@ -66,14 +69,14 @@ impl Command for Move {
         }
         .encrypt(&new_cipher)?;
 
-        let mut wtxn = db.write_txn()?;
+        let mut wtxn = env.write_txn()?;
 
-        db.set(&mut wtxn, &new_key, &new_val)?;
-        db.delete(&mut wtxn, &old_key)?;
+        pwd_db.set(&mut wtxn, &new_key, &new_val)?;
+        pwd_db.delete(&mut wtxn, &old_key)?;
 
         wtxn.commit()?;
 
-        db.close();
+        env.close();
 
         echo!(
             "> Entry moved: {} -> {}",
