@@ -48,7 +48,7 @@ impl Command for Move {
         // now check if the new key exists or not
         let new_key = key_cipher.encrypt(&self.new_key.as_ref())?;
         if pwd_db.get(&rtxn, &new_key).is_ok() {
-            return Err(KyError::Exist(self.new_key.as_ref().to_string()));
+            return Err(KyError::Exist);
         }
 
         rtxn.commit()?;

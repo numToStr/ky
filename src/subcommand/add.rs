@@ -42,7 +42,7 @@ impl Command for Add {
         let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
         if pwd_db.get(&rtxn, &key).is_ok() {
-            return Err(KyError::Exist(self.key.as_ref().to_string()));
+            return Err(KyError::Exist);
         }
 
         rtxn.commit()?;

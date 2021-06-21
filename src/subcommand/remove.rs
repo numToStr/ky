@@ -37,9 +37,7 @@ impl Command for Remove {
 
         let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
-        if pwd_db.get(&rtxn, &key).is_err() {
-            return Err(KyError::NotFound(self.key.as_ref().to_string()));
-        }
+        let _ = pwd_db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 

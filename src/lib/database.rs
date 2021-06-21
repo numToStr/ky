@@ -51,33 +51,24 @@ impl KyDb {
 
     /// Insert a key-val pair into the databse
     pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> Result<(), KyError> {
-        let res = self
-            .db
-            .put(wtxn, key, val)
-            .map_err(|_| KyError::Set(key.to_string()))?;
+        let res = self.db.put(wtxn, key, val).map_err(|_| KyError::Set)?;
 
         Ok(res)
     }
 
     /// Retrieve a key-val pair from the databse
     pub fn get(&self, rtxn: &RoTxn, key: &str) -> Result<String, KyError> {
-        let bytes = self
-            .db
-            .get(&rtxn, key)
-            .map_err(|_| KyError::Get(key.to_string()))?;
+        let bytes = self.db.get(&rtxn, key).map_err(|_| KyError::Get)?;
 
         match bytes {
             Some(x) => Ok(x.to_string()),
-            _ => Err(KyError::NotFound(key.to_string())),
+            _ => Err(KyError::NotFound),
         }
     }
 
     /// Delete a key-val pair from the databse
     pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> Result<bool, KyError> {
-        let is_deleted = self
-            .db
-            .delete(wtxn, key)
-            .map_err(|_| KyError::Delete(key.to_string()))?;
+        let is_deleted = self.db.delete(wtxn, key).map_err(|_| KyError::Delete)?;
 
         Ok(is_deleted)
     }
