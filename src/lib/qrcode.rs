@@ -1,13 +1,13 @@
 use qrcodegen::QrCode;
 
-use super::KyError;
+use super::{KyError, KyResult};
 
 pub struct Qr {
     qrcode: QrCode,
 }
 
 impl Qr {
-    pub fn new(data: &str) -> Result<Self, KyError> {
+    pub fn new(data: &str) -> KyResult<Self> {
         let qrcode =
             QrCode::encode_text(data, qrcodegen::QrCodeEcc::Medium).map_err(|_| KyError::Qr)?;
 

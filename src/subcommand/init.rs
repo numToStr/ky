@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -10,7 +10,7 @@ use clap::Clap;
 pub struct Init;
 
 impl Command for Init {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         if db_path.exists() {

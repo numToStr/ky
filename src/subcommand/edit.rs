@@ -4,7 +4,8 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER, PREFIX,
+        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
+        MASTER, PREFIX,
     },
 };
 use clap::Clap;
@@ -24,7 +25,7 @@ pub struct Edit {
 }
 
 impl Command for Edit {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);

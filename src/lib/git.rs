@@ -1,4 +1,4 @@
-use super::KyError;
+use super::{KyError, KyResult};
 use std::{
     path::Path,
     process::Command,
@@ -25,7 +25,7 @@ impl<'a> Git<'a> {
         Command::new("git")
     }
 
-    pub fn init(self) -> Result<Self, KyError> {
+    pub fn init(self) -> KyResult<Self> {
         let init_status = self.git().args(&["init", &self.target]).spawn()?.wait()?;
 
         if !init_status.success() {
@@ -35,7 +35,7 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    pub fn add(self) -> Result<Self, KyError> {
+    pub fn add(self) -> KyResult<Self> {
         let status = self
             .git()
             .args(&["-C", &self.target, "add", "."])
@@ -49,7 +49,7 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    pub fn commit(self) -> Result<Self, KyError> {
+    pub fn commit(self) -> KyResult<Self> {
         let time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_err(|x| KyError::Any(x.to_string()))?
@@ -75,7 +75,7 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    pub fn push(self, force: bool) -> Result<Self, KyError> {
+    pub fn push(self, force: bool) -> KyResult<Self> {
         let status = self
             .git()
             .args(&[
@@ -96,7 +96,7 @@ impl<'a> Git<'a> {
         Ok(self)
     }
 
-    pub fn clone(self) -> Result<Self, KyError> {
+    pub fn clone(self) -> KyResult<Self> {
         let status = self
             .git()
             .args(&["clone", &self.repo, &self.target, "--branch", &self.branch])

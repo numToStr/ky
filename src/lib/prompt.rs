@@ -1,4 +1,4 @@
-use super::KyError;
+use super::KyResult;
 use dialoguer::{
     console::{style, Style},
     theme::{ColorfulTheme, Theme},
@@ -9,7 +9,7 @@ use std::io;
 pub const PREFIX: char = '~';
 pub const EMPTY: &str = "-";
 
-type PromptReturn = Result<String, KyError>;
+type PromptReturn = KyResult<String>;
 
 pub struct Prompt;
 

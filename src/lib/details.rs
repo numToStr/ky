@@ -1,4 +1,4 @@
-use super::{Cipher, KyError};
+use super::{Cipher, KyResult};
 use std::fmt::{self, Display, Formatter};
 
 pub const DELIM: char = ':';
@@ -40,7 +40,7 @@ pub struct Details {
 }
 
 impl Details {
-    pub fn encrypt(&self, cipher: &Cipher) -> Result<String, KyError> {
+    pub fn encrypt(&self, cipher: &Cipher) -> KyResult<String> {
         let password = hexed!(cipher.encrypt(&self.password)?);
         let username = hexed!(self.username);
         let website = hexed!(self.website);
@@ -59,7 +59,7 @@ impl Details {
         cipher.encrypt(&val)
     }
 
-    pub fn decrypt(cipher: &Cipher, encrypted: &str) -> Result<Self, KyError> {
+    pub fn decrypt(cipher: &Cipher, encrypted: &str) -> KyResult<Self> {
         let decrypted = cipher.decrypt(&encrypted)?;
 
         let mut keys = decrypted.splitn(5, DELIM);

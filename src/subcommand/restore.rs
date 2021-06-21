@@ -4,7 +4,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{KyError, Prompt, Vault},
+    lib::{KyError, KyResult, Prompt, Vault},
 };
 use clap::Clap;
 
@@ -20,7 +20,7 @@ pub struct Restore {
 }
 
 impl Command for Restore {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let theme = Prompt::theme();
         // let master_pwd = Password::ask_master(&theme)?;
 

@@ -1,4 +1,4 @@
-use super::KyError;
+use super::{KyError, KyResult};
 use crate::cli::PasswordParams;
 use argon2::{
     password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier, Version,
@@ -18,7 +18,7 @@ pub struct Password {
 }
 
 impl Password {
-    pub fn init(theme: &impl Theme) -> Result<Self, KyError> {
+    pub fn init(theme: &impl Theme) -> KyResult<Self> {
         let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("New master password")
             .with_confirmation("Retype to verify", "Passwords didn't match")
@@ -27,7 +27,7 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn ask_master(theme: &impl Theme) -> Result<Self, KyError> {
+    pub fn ask_master(theme: &impl Theme) -> KyResult<Self> {
         let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("Enter master password")
             .interact()?;
@@ -35,7 +35,7 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn hash(&self) -> Result<String, KyError> {
+    pub fn hash(&self) -> KyResult<String> {
         let pll = num_cpus::get() as u32;
         let salt = SaltString::generate(&mut OsRng);
 
@@ -51,7 +51,7 @@ impl Password {
         Ok(hash)
     }
 
-    pub fn verify(&self, hash: &str) -> Result<bool, KyError> {
+    pub fn verify(&self, hash: &str) -> KyResult<bool> {
         let parsed_hash = PasswordHash::new(hash).map_err(|_| KyError::PwdVerify)?;
 
         let argon = Argon2::default();

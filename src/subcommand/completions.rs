@@ -1,7 +1,7 @@
 use super::Command;
 use crate::{
     cli::{Cli, Config},
-    lib::{shell::Shell, KyError},
+    lib::{shell::Shell, KyResult},
 };
 use clap::{crate_name, Clap, IntoApp};
 use clap_generate::{
@@ -16,7 +16,7 @@ pub struct Completions {
 }
 
 impl Command for Completions {
-    fn exec(&self, _: Config) -> Result<(), KyError> {
+    fn exec(&self, _: Config) -> KyResult<()> {
         let name = crate_name!();
         let mut app = Cli::into_app();
         let mut fd = std::io::stdout();

@@ -2,7 +2,10 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, Qr, MASTER},
+    lib::{
+        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt, Qr,
+        MASTER,
+    },
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -29,7 +32,7 @@ pub struct Show {
 }
 
 impl Command for Show {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);

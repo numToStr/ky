@@ -2,7 +2,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use std::fs::remove_dir_all;
@@ -17,7 +17,7 @@ pub struct Nuke {
 }
 
 impl Command for Nuke {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
