@@ -605,11 +605,11 @@ dependencies = [
 
 [[package]]
 name = "papergrid"
-version = "0.1.13"
+version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8a7c69a5b4fd2092608ecd8c786a5d33575ee777df7aad4928b3e6c683821ae"
+checksum = "73bd11c70819eef8d1c7a40bf0fc09a64cbf33bd540d224a0fc891cb248a0391"
 dependencies = [
- "textwrap",
+ "unicode-width",
 ]
 
 [[package]]
@@ -841,12 +841,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "smawk"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f67ad224767faa3c7d8b6d91985b78e70a1324408abcb1cfcc2be4c06bc06043"
-
-[[package]]
 name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -880,9 +874,9 @@ dependencies = [
 
 [[package]]
 name = "tabled"
-version = "0.1.4"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c902009334b16d196d54b9329d141cb5709ebf47ef7310feeb6636edf4f2875"
+checksum = "c29876c8177b1f5219d242f5d74e21251749f3b4fe04aeeb9b3c414ed4773366"
 dependencies = [
  "papergrid",
  "tabled_derive",
@@ -949,7 +943,6 @@ version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd05616119e612a8041ef58f2b578906cc2531a6069047ae092cfb86a325d835"
 dependencies = [
- "smawk",
  "unicode-width",
 ]
 
