@@ -22,6 +22,10 @@ ky export
 ky import
 ```
 
+### Fixed
+
+-   Printing encrypted key on error [#11](https://github.com/numToStr/ky/pull/11)
+
 ## [0.1.0] - 2020-06-19
 
 ### Added
