@@ -21,20 +21,20 @@ pub enum KyError {
     #[error("Vault backup not found on the provided path!")]
     BackupDontExist,
 
-    #[error("Entry not found in the vault: `{0}`")]
-    NotFound(String),
+    #[error("Entry not found in the vault!")]
+    NotFound,
 
-    #[error("Entry already exist in the vault: `{0}`")]
-    Exist(String),
+    #[error("Entry already exist in the vault!")]
+    Exist,
 
-    #[error("Unable to get the entry: `{0}`")]
-    Get(String),
+    #[error("Unable to get the entry!")]
+    Get,
 
-    #[error("Unable to set the entry: `{0}`")]
-    Set(String),
+    #[error("Unable to set the entry!")]
+    Set,
 
-    #[error("Unable to delete the entry: `{0}`")]
-    Delete(String),
+    #[error("Unable to delete the entry~")]
+    Delete,
     // #endregion
     #[error("Unable to hash the password!")]
     PwdHash,
