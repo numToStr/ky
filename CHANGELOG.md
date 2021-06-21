@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Introduce `KyResult<()>`, which is an alias for `Result<(), KyError>` [#15](https://github.com/numToStr/ky/pull/15)
+
 ### Changed
 
 -   Store master password in common database [#10](https://github.com/numToStr/ky/pull/10)
