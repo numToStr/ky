@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   Store master password in common database [#10](https://github.com/numToStr/ky/pull/10)
+
+This is **BREAKING** change which will break the existing stored data. To migrate to the new format you need to export your data.
+
+```bash
+# Export data from previous version likely v0.1.0
+ky export
+
+# Update to new version and import the exported data
+# Make sure to delete the existing database
+ky import
+```
+
 ## [0.1.0] - 2020-06-19
 
 ### Added
