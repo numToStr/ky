@@ -1,4 +1,4 @@
-use super::{key::EntryKey, Details, KyEnv, KyError, KyTable, MASTER};
+use super::{key::EntryKey, Details, KyEnv, KyError, KyResult, KyTable, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,7 @@ impl<'a> Vault<'a> {
         Self { src }
     }
 
-    pub fn backup(&self, dest: &'a Path) -> Result<File, KyError> {
+    pub fn backup(&self, dest: &'a Path) -> KyResult<File> {
         let mut tar = tar::Builder::new(Vec::new());
 
         tar.append_dir_all(".", self.src)?;
@@ -46,7 +46,7 @@ impl<'a> Vault<'a> {
         Ok(f)
     }
 
-    pub fn restore(&self, dest: &'a Path) -> Result<(), KyError> {
+    pub fn restore(&self, dest: &'a Path) -> KyResult<()> {
         let decoder = {
             let file = File::open(self.src)?;
             zstd::Decoder::new(file)?
@@ -63,7 +63,7 @@ impl<'a> Vault<'a> {
         dest: &'a Path,
         master_pwd: &Password,
         entries: Vec<(String, String)>,
-    ) -> Result<(), KyError> {
+    ) -> KyResult<()> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
         let key_cipher = Cipher::for_key(master_pwd);
 
@@ -88,7 +88,7 @@ impl<'a> Vault<'a> {
     }
 
     #[inline]
-    pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> Result<(), KyError> {
+    pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> KyResult<()> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 

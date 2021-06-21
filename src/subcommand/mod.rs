@@ -14,7 +14,7 @@ mod remove;
 mod restore;
 mod show;
 
-use crate::{cli::Config, lib::KyError};
+use crate::{cli::Config, lib::KyResult};
 use clap::Subcommand;
 
 use self::{
@@ -24,7 +24,7 @@ use self::{
 };
 
 pub(self) trait Command {
-    fn exec(&self, config: Config) -> Result<(), KyError>;
+    fn exec(&self, config: Config) -> KyResult<()>;
 }
 
 #[derive(Debug, Subcommand)]
@@ -93,7 +93,7 @@ pub enum SubCommand {
 }
 
 impl SubCommand {
-    pub fn exec(&self, config: Config) -> Result<(), KyError> {
+    pub fn exec(&self, config: Config) -> KyResult<()> {
         match self {
             Self::Completions(c) => c.exec(config),
             Self::Init(c) => c.exec(config),

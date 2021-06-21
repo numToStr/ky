@@ -1,4 +1,4 @@
-use super::{key::EntryKey, KyError, Password};
+use super::{key::EntryKey, KyError, KyResult, Password};
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
@@ -13,11 +13,7 @@ pub struct Cipher {
 
 impl Cipher {
     #[inline]
-    fn make_key<const T: usize>(
-        master: &[u8],
-        key: &[u8],
-        data: &[u8],
-    ) -> Result<[u8; T], KyError> {
+    fn make_key<const T: usize>(master: &[u8], key: &[u8], data: &[u8]) -> KyResult<[u8; T]> {
         let h = Hkdf::<Sha256>::new(Some(key), master);
         let mut okm = [0u8; T];
         h.expand(data, &mut okm)
@@ -37,7 +33,7 @@ impl Cipher {
         Self { cipher, nonce }
     }
 
-    pub fn for_value(master: &Password, key: &EntryKey) -> Result<Self, KyError> {
+    pub fn for_value(master: &Password, key: &EntryKey) -> KyResult<Self> {
         let m = master.to_string();
         let master_bytes = m.as_bytes();
         let key_bytes = key.as_ref().as_bytes();
@@ -56,7 +52,7 @@ impl Cipher {
         Ok(Self { cipher, nonce })
     }
 
-    pub fn encrypt(&self, data: &str) -> Result<String, KyError> {
+    pub fn encrypt(&self, data: &str) -> KyResult<String> {
         let cipher_txt = self
             .cipher
             .encrypt(&self.nonce, data.as_bytes())
@@ -67,7 +63,7 @@ impl Cipher {
         Ok(pwd_encrypted)
     }
 
-    pub fn decrypt(&self, encrypted: &str) -> Result<String, KyError> {
+    pub fn decrypt(&self, encrypted: &str) -> KyResult<String> {
         let slice = hex::decode(encrypted).map_err(|_| KyError::Decrypt)?;
 
         let decrypted = self

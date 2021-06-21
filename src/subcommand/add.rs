@@ -3,7 +3,9 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{
+        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER,
+    },
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -18,7 +20,7 @@ pub struct Add {
 }
 
 impl Command for Add {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);

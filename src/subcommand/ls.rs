@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{Cipher, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -11,7 +11,7 @@ use super::Command;
 pub struct Ls;
 
 impl Command for Ls {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);

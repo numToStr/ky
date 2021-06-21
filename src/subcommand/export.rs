@@ -4,7 +4,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyTable, Password, Prompt, Vault, MASTER},
+    lib::{KyEnv, KyError, KyResult, KyTable, Password, Prompt, Vault, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -23,7 +23,7 @@ pub struct Export {
 }
 
 impl Command for Export {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);

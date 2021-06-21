@@ -1,7 +1,7 @@
 use crate::{
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, Password, Prompt, Vault},
+    lib::{KyEnv, KyError, KyResult, Password, Prompt, Vault},
 };
 use clap::Clap;
 
@@ -21,7 +21,7 @@ pub struct Import {
 }
 
 impl Command for Import {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let import_path = match &self.path {
             Some(p) => p.to_path_buf(),
             _ => config.export_path(),

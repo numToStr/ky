@@ -1,4 +1,4 @@
-use super::{KyError, MASTER};
+use super::{KyError, KyResult, MASTER};
 use heed::{types::Str, Database as Mdbx, Env, EnvOpenOptions, RoTxn, RwTxn};
 use std::{
     fmt::{self, Display, Formatter},
@@ -41,7 +41,7 @@ pub struct KyDb {
 
 impl KyDb {
     /// Returns a new connection to a database from provided env and name
-    pub fn new(env: &Env, name: &KyTable) -> Result<Self, KyError> {
+    pub fn new(env: &Env, name: &KyTable) -> KyResult<Self> {
         let db: KyDbType = env
             .create_database(Some(&name.to_string()))
             .map_err(|_| KyError::Connection)?;
@@ -50,14 +50,14 @@ impl KyDb {
     }
 
     /// Insert a key-val pair into the databse
-    pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> Result<(), KyError> {
+    pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> KyResult<()> {
         let res = self.db.put(wtxn, key, val).map_err(|_| KyError::Set)?;
 
         Ok(res)
     }
 
     /// Retrieve a key-val pair from the databse
-    pub fn get(&self, rtxn: &RoTxn, key: &str) -> Result<String, KyError> {
+    pub fn get(&self, rtxn: &RoTxn, key: &str) -> KyResult<String> {
         let bytes = self.db.get(&rtxn, key).map_err(|_| KyError::Get)?;
 
         match bytes {
@@ -67,14 +67,14 @@ impl KyDb {
     }
 
     /// Delete a key-val pair from the databse
-    pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> Result<bool, KyError> {
+    pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> KyResult<bool> {
         let is_deleted = self.db.delete(wtxn, key).map_err(|_| KyError::Delete)?;
 
         Ok(is_deleted)
     }
 
     /// Retrieve all the key-val pair in the databse
-    pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<(String, String)>, KyError> {
+    pub fn ls(&self, rtxn: &RoTxn) -> KyResult<Vec<(String, String)>> {
         let mut keys: Vec<(String, String)> = Vec::new();
 
         for kv in self.db.iter(rtxn)? {
@@ -96,7 +96,7 @@ pub struct KyEnv {
 
 impl KyEnv {
     /// Connects to new lmdb environment
-    pub fn connect(path: &Path) -> Result<Self, KyError> {
+    pub fn connect(path: &Path) -> KyResult<Self> {
         let env = EnvOpenOptions::new()
             .max_dbs(5)
             .open(path)
@@ -106,19 +106,19 @@ impl KyEnv {
     }
 
     /// Returns a database connection
-    pub fn get_table(&self, name: KyTable) -> Result<KyDb, KyError> {
+    pub fn get_table(&self, name: KyTable) -> KyResult<KyDb> {
         KyDb::new(&self.env, &name)
     }
 
     /// Returns a write-read transaction
-    pub fn write_txn(&self) -> Result<RwTxn, KyError> {
+    pub fn write_txn(&self) -> KyResult<RwTxn> {
         let wtxn = self.env.write_txn()?;
 
         Ok(wtxn)
     }
 
     /// Returns a read-only transaction
-    pub fn read_txn(&self) -> Result<RoTxn, KyError> {
+    pub fn read_txn(&self) -> KyResult<RoTxn> {
         let rtxn = self.env.read_txn()?;
 
         Ok(rtxn)

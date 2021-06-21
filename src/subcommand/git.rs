@@ -4,7 +4,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{Git, KyError, Prompt},
+    lib::{Git, KyError, KyResult, Prompt},
 };
 use clap::Clap;
 
@@ -34,7 +34,7 @@ pub enum GitCmd {
 }
 
 impl Command for GitCmd {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         match self {
             Self::Init(c) => c.exec(config),
             Self::Backup(c) => c.exec(config),
@@ -51,7 +51,7 @@ pub struct GitInit {
 }
 
 impl Command for GitInit {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -84,7 +84,7 @@ pub struct GitBackup {
 }
 
 impl Command for GitBackup {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -115,7 +115,7 @@ pub struct GitRestore {
 }
 
 impl Command for GitRestore {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let (repo, branch) = check_git_details!(&config.git_repo, &config.git_branch)?;
 
         let theme = Prompt::theme();
