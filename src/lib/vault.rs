@@ -1,4 +1,4 @@
-use super::{key::EntryKey, Database, Details, KyError, MASTER};
+use super::{key::EntryKey, Details, KyEnv, KyError, KyTable, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -87,13 +87,17 @@ impl<'a> Vault<'a> {
         Ok(())
     }
 
-    pub fn import(src: &Path, master_pwd: &Password, db: &Database) -> Result<(), KyError> {
+    #[inline]
+    pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> Result<(), KyError> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
-        let mut wtxn = db.write_txn()?;
+        let common_db = env.get_table(KyTable::Common)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
 
-        db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
+        let mut wtxn = env.write_txn()?;
+
+        common_db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
 
         let key_cipher = Cipher::for_key(&master_pwd);
 
@@ -113,7 +117,7 @@ impl<'a> Vault<'a> {
 
             let key = key_cipher.encrypt(&k.title.as_ref())?;
 
-            db.set(&mut wtxn, &key, &val.to_string())?;
+            pwd_db.set(&mut wtxn, &key, &val.to_string())?;
         }
 
         wtxn.commit()?;

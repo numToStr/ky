@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -26,10 +26,14 @@ impl Command for Add {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, MASTER)?;
+        let common_db = env.get_table(KyTable::Common)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
+
+        let rtxn = env.read_txn()?;
+
+        let hashed = common_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -37,7 +41,7 @@ impl Command for Add {
 
         let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
-        if db.get(&rtxn, &key).is_ok() {
+        if pwd_db.get(&rtxn, &key).is_ok() {
             return Err(KyError::Exist(self.key.as_ref().to_string()));
         }
 
@@ -61,13 +65,13 @@ impl Command for Add {
         }
         .encrypt(&cipher)?;
 
-        let mut wtxn = db.write_txn()?;
+        let mut wtxn = env.write_txn()?;
 
-        db.set(&mut wtxn, &key, &encrypted)?;
+        pwd_db.set(&mut wtxn, &key, &encrypted)?;
 
         wtxn.commit()?;
 
-        db.close();
+        env.close();
 
         echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
 

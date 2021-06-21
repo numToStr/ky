@@ -2,7 +2,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Database, KyError, Password, Prompt, MASTER},
+    lib::{KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use std::fs::remove_dir_all;
@@ -25,13 +25,14 @@ impl Command for Nuke {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
+        let common_db = env.get_table(KyTable::Common)?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, MASTER)?;
+        let rtxn = env.read_txn()?;
+        let hashed = common_db.get(&rtxn, MASTER)?;
         rtxn.commit()?;
 
-        db.close();
+        env.close();
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);

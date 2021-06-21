@@ -15,67 +15,54 @@ macro_rules! check_db {
     };
 }
 
-type DatabaseType = Mdbx<Str, Str>;
+type KyDbType = Mdbx<Str, Str>;
 
 /// KyTable is a collection of all the table names
-enum KyTable {
+pub enum KyTable {
+    /// Common table to store common data across multiple tables ie. master password
+    Common,
+    /// Password table where all the passwords are stored
     Password,
 }
 
 impl Display for KyTable {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Common => f.write_str("common"),
             Self::Password => f.write_str("password"),
         }
     }
 }
 
-pub struct Database {
-    env: Env,
-    conn: DatabaseType,
+/// KyDb holds a individual database and its methods
+pub struct KyDb {
+    db: KyDbType,
 }
 
-impl Database {
-    pub fn open(path: &Path) -> Result<Self, KyError> {
-        let env = EnvOpenOptions::new()
-            .max_dbs(5)
-            .open(path)
+impl KyDb {
+    /// Returns a new connection to a database from provided env and name
+    pub fn new(env: &Env, name: &KyTable) -> Result<Self, KyError> {
+        let db: KyDbType = env
+            .create_database(Some(&name.to_string()))
             .map_err(|_| KyError::Connection)?;
 
-        let table = KyTable::Password.to_string();
-
-        // we will open the default unamed database
-        let conn: DatabaseType = env
-            .create_database(Some(&table))
-            .map_err(|_| KyError::Connection)?;
-
-        Ok(Self { env, conn })
+        Ok(Self { db })
     }
 
-    pub fn write_txn(&self) -> Result<RwTxn, KyError> {
-        let wtxn = self.env.write_txn()?;
-
-        Ok(wtxn)
-    }
-
-    pub fn read_txn(&self) -> Result<RoTxn, KyError> {
-        let rtxn = self.env.read_txn()?;
-
-        Ok(rtxn)
-    }
-
+    /// Insert a key-val pair into the databse
     pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> Result<(), KyError> {
         let res = self
-            .conn
+            .db
             .put(wtxn, key, val)
             .map_err(|_| KyError::Set(key.to_string()))?;
 
         Ok(res)
     }
 
+    /// Retrieve a key-val pair from the databse
     pub fn get(&self, rtxn: &RoTxn, key: &str) -> Result<String, KyError> {
         let bytes = self
-            .conn
+            .db
             .get(&rtxn, key)
             .map_err(|_| KyError::Get(key.to_string()))?;
 
@@ -85,19 +72,21 @@ impl Database {
         }
     }
 
+    /// Delete a key-val pair from the databse
     pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> Result<bool, KyError> {
         let is_deleted = self
-            .conn
+            .db
             .delete(wtxn, key)
             .map_err(|_| KyError::Delete(key.to_string()))?;
 
         Ok(is_deleted)
     }
 
+    /// Retrieve all the key-val pair in the databse
     pub fn ls(&self, rtxn: &RoTxn) -> Result<Vec<(String, String)>, KyError> {
         let mut keys: Vec<(String, String)> = Vec::new();
 
-        for kv in self.conn.iter(rtxn)? {
+        for kv in self.db.iter(rtxn)? {
             let (k, v) = kv?;
 
             if k != MASTER {
@@ -107,7 +96,44 @@ impl Database {
 
         Ok(keys)
     }
+}
 
+/// KyEnv hold the lmdb environment and database connection
+pub struct KyEnv {
+    env: Env,
+}
+
+impl KyEnv {
+    /// Connects to new lmdb environment
+    pub fn connect(path: &Path) -> Result<Self, KyError> {
+        let env = EnvOpenOptions::new()
+            .max_dbs(5)
+            .open(path)
+            .map_err(|_| KyError::Connection)?;
+
+        Ok(Self { env })
+    }
+
+    /// Returns a database connection
+    pub fn get_table(&self, name: KyTable) -> Result<KyDb, KyError> {
+        KyDb::new(&self.env, &name)
+    }
+
+    /// Returns a write-read transaction
+    pub fn write_txn(&self) -> Result<RwTxn, KyError> {
+        let wtxn = self.env.write_txn()?;
+
+        Ok(wtxn)
+    }
+
+    /// Returns a read-only transaction
+    pub fn read_txn(&self) -> Result<RoTxn, KyError> {
+        let rtxn = self.env.read_txn()?;
+
+        Ok(rtxn)
+    }
+
+    /// Closes the open connection
     pub fn close(self) {
         self.env.prepare_for_closing().wait();
     }

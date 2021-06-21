@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     check_db,
     cli::Config,
-    lib::{key::EntryKey, Cipher, Database, Details, KyError, Password, Prompt, Qr, MASTER},
+    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, Qr, MASTER},
 };
 use clap::Clap;
 use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
@@ -36,10 +36,13 @@ impl Command for Show {
 
         let master_pwd = Password::ask_master(&Prompt::theme())?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, &MASTER)?;
+        let common_db = env.get_table(KyTable::Common)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
+
+        let rtxn = env.read_txn()?;
+        let hashed = common_db.get(&rtxn, &MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -49,11 +52,11 @@ impl Command for Show {
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
-        let encrypted = db.get(&rtxn, &key)?;
+        let encrypted = pwd_db.get(&rtxn, &key)?;
 
         rtxn.commit()?;
 
-        db.close();
+        env.close();
 
         let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 

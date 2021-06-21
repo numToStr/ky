@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{key::EntryKey, Cipher, Database, KyError, Password, Prompt, MASTER},
+    lib::{key::EntryKey, Cipher, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -23,10 +23,13 @@ impl Command for Remove {
         let theme = Prompt::theme();
         let master_pwd = Password::ask_master(&theme)?;
 
-        let db = Database::open(&db_path)?;
+        let env = KyEnv::connect(&db_path)?;
 
-        let rtxn = db.read_txn()?;
-        let hashed = db.get(&rtxn, MASTER)?;
+        let common_db = env.get_table(KyTable::Common)?;
+        let pwd_db = env.get_table(KyTable::Password)?;
+
+        let rtxn = env.read_txn()?;
+        let hashed = common_db.get(&rtxn, MASTER)?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -34,23 +37,23 @@ impl Command for Remove {
 
         let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
 
-        if db.get(&rtxn, &key).is_err() {
+        if pwd_db.get(&rtxn, &key).is_err() {
             return Err(KyError::NotFound(self.key.as_ref().to_string()));
         }
 
         rtxn.commit()?;
 
         if Prompt::proceed(&theme)? {
-            let mut wtxn = db.write_txn()?;
+            let mut wtxn = env.write_txn()?;
 
-            db.delete(&mut wtxn, &key)?;
+            pwd_db.delete(&mut wtxn, &key)?;
 
             echo!("> Entry deleted: {}", style(&self.key.as_ref()).bold());
 
             wtxn.commit()?;
         }
 
-        db.close();
+        env.close();
 
         Ok(())
     }
