@@ -3,8 +3,8 @@ use crate::{
     check_db,
     cli::Config,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt, Qr,
-        MASTER,
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Password, Prompt, Qr, MASTER,
     },
 };
 use clap::Clap;
@@ -45,13 +45,14 @@ impl Command for Show {
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
-        let hashed = common_db.get(&rtxn, &MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master_pwd);
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
@@ -71,13 +72,13 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(cipher.decrypt(&val.password)?)
+            Some(cipher.decrypt(&Encrypted::from(val.password))?)
         } else {
             None
         };
 
         if let (true, Some(p)) = (self.qr_code, &password) {
-            let code = Qr::new(&p)?.render();
+            let code = Qr::new(&p.as_ref())?.render();
             eprint!("{}", code);
         }
 
@@ -91,7 +92,7 @@ impl Command for Show {
             Tr(
                 "Password",
                 if let (true, Some(p)) = (self.clear, password) {
-                    p
+                    p.into()
                 } else {
                     "*".repeat(15)
                 },

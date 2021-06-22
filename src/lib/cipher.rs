@@ -1,4 +1,4 @@
-use super::{key::EntryKey, KyError, KyResult, Password};
+use super::{Decrypted, Encrypted, EntryKey, KyError, KyResult, Password};
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
@@ -22,7 +22,7 @@ impl Cipher {
     }
 
     pub fn for_key(master: &Password) -> Self {
-        let master_sha = Sha256::digest(master.to_string().as_bytes());
+        let master_sha = Sha256::digest(master.as_ref().as_bytes());
         let master_key = Key::from_slice(&master_sha);
         let cipher = Aes256GcmSiv::new(master_key);
 
@@ -34,8 +34,7 @@ impl Cipher {
     }
 
     pub fn for_value(master: &Password, key: &EntryKey) -> KyResult<Self> {
-        let m = master.to_string();
-        let master_bytes = m.as_bytes();
+        let master_bytes = master.as_ref().as_bytes();
         let key_bytes = key.as_ref().as_bytes();
 
         let first_pass = Self::make_key::<256>(master_bytes, key_bytes, &[])?;
@@ -52,27 +51,27 @@ impl Cipher {
         Ok(Self { cipher, nonce })
     }
 
-    pub fn encrypt(&self, data: &str) -> KyResult<String> {
+    pub fn encrypt(&self, data: &Decrypted) -> KyResult<Encrypted> {
         let cipher_txt = self
             .cipher
-            .encrypt(&self.nonce, data.as_bytes())
+            .encrypt(&self.nonce, data.as_ref().as_bytes())
             .map_err(|_| KyError::Encrypt)?;
 
-        let pwd_encrypted = hex::encode(&cipher_txt);
+        let encrypted = hex::encode(&cipher_txt);
 
-        Ok(pwd_encrypted)
+        Ok(Encrypted::from(encrypted))
     }
 
-    pub fn decrypt(&self, encrypted: &str) -> KyResult<String> {
-        let slice = hex::decode(encrypted).map_err(|_| KyError::Decrypt)?;
+    pub fn decrypt(&self, encrypted: &Encrypted) -> KyResult<Decrypted> {
+        let slice = hex::decode(encrypted.as_ref()).map_err(|_| KyError::Decrypt)?;
 
         let decrypted = self
             .cipher
             .decrypt(&self.nonce, &slice as &[u8])
             .map_err(|_| KyError::Decrypt)?;
 
-        let pwd_decrypted = String::from_utf8(decrypted).map_err(|_| KyError::Decrypt)?;
+        let decrypted = String::from_utf8(decrypted).map_err(|_| KyError::Decrypt)?;
 
-        Ok(pwd_decrypted)
+        Ok(Decrypted::from(decrypted))
     }
 }

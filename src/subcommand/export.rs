@@ -4,7 +4,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyResult, KyTable, Password, Prompt, Vault, MASTER},
+    lib::{Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, Vault, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -38,9 +38,9 @@ impl Command for Export {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 

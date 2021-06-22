@@ -4,8 +4,8 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
-        MASTER, PREFIX,
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Password, Prompt, MASTER, PREFIX,
     },
 };
 use clap::Clap;
@@ -40,13 +40,14 @@ impl Command for Edit {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master_pwd);
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let encrypted = pwd_db.get(&rtxn, &key)?;
 
@@ -67,11 +68,12 @@ impl Command for Edit {
         let notes = Prompt::notes_with_default(&theme, old_val.notes)?;
 
         let password = if self.password {
-            let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
+            let p = Password::generate(&self.pwd_opt);
             println!("{} Password regenerated", style(PREFIX).bold());
-            p
+            p.as_ref().to_string()
         } else {
-            cipher.decrypt(&old_val.password)?
+            let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
+            p.as_ref().to_string()
         };
 
         let new_val = Details {

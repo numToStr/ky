@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
+    lib::{Cipher, Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -25,9 +25,9 @@ impl Command for Ls {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
@@ -43,7 +43,7 @@ impl Command for Ls {
 
             for (key, _) in keys {
                 let key = key_cipher.decrypt(&key)?;
-                println!("- {}", key);
+                println!("- {}", String::from(key));
             }
         }
 
