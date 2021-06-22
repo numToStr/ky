@@ -4,7 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER,
+        Cipher, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
+        MASTER,
     },
 };
 use clap::Clap;
@@ -34,7 +35,7 @@ impl Command for Move {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
@@ -63,7 +64,7 @@ impl Command for Move {
         println!("- Encrypting new details...");
         let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
         let new_val = Details {
-            password: old_cipher.decrypt(&old_val.password)?,
+            password: old_cipher.decrypt(&old_val.password)?.into(),
             username: old_val.username,
             website: old_val.website,
             expires: old_val.expires,

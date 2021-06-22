@@ -1,4 +1,4 @@
-use super::{KyError, KyResult, MASTER};
+use super::{Encrypted, KyError, KyResult, MASTER};
 use heed::{types::Str, Database as Mdbx, Env, EnvOpenOptions, RoTxn, RwTxn};
 use std::{
     fmt::{self, Display, Formatter},
@@ -50,15 +50,18 @@ impl KyDb {
     }
 
     /// Insert a key-val pair into the databse
-    pub fn set(&self, wtxn: &mut RwTxn, key: &str, val: &str) -> KyResult<()> {
-        let res = self.db.put(wtxn, key, val).map_err(|_| KyError::Set)?;
+    pub fn set(&self, wtxn: &mut RwTxn, key: &Encrypted, val: &Encrypted) -> KyResult<()> {
+        let res = self
+            .db
+            .put(wtxn, key.as_ref(), val.as_ref())
+            .map_err(|_| KyError::Set)?;
 
         Ok(res)
     }
 
     /// Retrieve a key-val pair from the databse
-    pub fn get(&self, rtxn: &RoTxn, key: &str) -> KyResult<String> {
-        let bytes = self.db.get(&rtxn, key).map_err(|_| KyError::Get)?;
+    pub fn get(&self, rtxn: &RoTxn, key: &Encrypted) -> KyResult<String> {
+        let bytes = self.db.get(&rtxn, key.as_ref()).map_err(|_| KyError::Get)?;
 
         match bytes {
             Some(x) => Ok(x.to_string()),
@@ -67,8 +70,11 @@ impl KyDb {
     }
 
     /// Delete a key-val pair from the databse
-    pub fn delete(&self, wtxn: &mut RwTxn, key: &str) -> KyResult<bool> {
-        let is_deleted = self.db.delete(wtxn, key).map_err(|_| KyError::Delete)?;
+    pub fn delete(&self, wtxn: &mut RwTxn, key: &Encrypted) -> KyResult<bool> {
+        let is_deleted = self
+            .db
+            .delete(wtxn, key.as_ref())
+            .map_err(|_| KyError::Delete)?;
 
         Ok(is_deleted)
     }

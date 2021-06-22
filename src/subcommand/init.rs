@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
+    lib::{Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -27,7 +27,7 @@ impl Command for Init {
 
         let mut txn = env.write_txn()?;
 
-        common_db.set(&mut txn, MASTER, &hashed)?;
+        common_db.set(&mut txn, &Encrypted::from(MASTER), &hashed)?;
 
         txn.commit()?;
 

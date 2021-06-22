@@ -3,12 +3,12 @@ mod database;
 mod details;
 mod error;
 mod git;
-pub mod key;
 mod password;
 mod prompt;
 mod qrcode;
 pub mod shell;
 mod tree;
+mod types;
 mod vault;
 
 pub use cipher::*;
@@ -20,6 +20,7 @@ pub use password::*;
 pub use prompt::*;
 pub use qrcode::*;
 pub use tree::*;
+pub use types::*;
 pub use vault::*;
 
 pub const MASTER: &str = "master";

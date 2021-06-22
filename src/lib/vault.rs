@@ -1,4 +1,4 @@
-use super::{key::EntryKey, Details, KyEnv, KyError, KyResult, KyTable, MASTER};
+use super::{Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -77,7 +77,7 @@ impl<'a> Vault<'a> {
                 title: key,
                 website: val.website,
                 username: val.username,
-                password: cipher.decrypt(&val.password)?,
+                password: cipher.decrypt(&val.password)?.into(),
                 notes: val.notes,
                 expires: val.expires,
             })
@@ -97,7 +97,9 @@ impl<'a> Vault<'a> {
 
         let mut wtxn = env.write_txn()?;
 
-        common_db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
+        let hashed = master_pwd.hash()?;
+
+        common_db.set(&mut wtxn, &Encrypted::from(MASTER), &hashed)?;
 
         let key_cipher = Cipher::for_key(&master_pwd);
 
@@ -117,7 +119,7 @@ impl<'a> Vault<'a> {
 
             let key = key_cipher.encrypt(&k.title.as_ref())?;
 
-            pwd_db.set(&mut wtxn, &key, &val.to_string())?;
+            pwd_db.set(&mut wtxn, &key, &val)?;
         }
 
         wtxn.commit()?;

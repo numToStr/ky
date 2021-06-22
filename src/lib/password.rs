@@ -1,11 +1,10 @@
-use super::{KyError, KyResult};
+use super::{Encrypted, KyError, KyResult};
 use crate::cli::PasswordParams;
 use argon2::{
     password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier, Version,
 };
 use dialoguer::theme::Theme;
 use rand::{rngs::OsRng, thread_rng, Rng};
-use std::fmt::{self, Display, Formatter};
 
 const ITR: u32 = 3;
 const MEM: u32 = 1024 * 128; // 128MB
@@ -13,6 +12,7 @@ const MEM: u32 = 1024 * 128; // 128MB
 const CHARSET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
 
+#[derive(Debug, Clone)]
 pub struct Password {
     raw: String,
 }
@@ -35,7 +35,7 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn hash(&self) -> KyResult<String> {
+    pub fn hash(&self) -> KyResult<Encrypted> {
         let pll = num_cpus::get() as u32;
         let salt = SaltString::generate(&mut OsRng);
 
@@ -48,7 +48,7 @@ impl Password {
             .map_err(|_| KyError::PwdHash)?
             .to_string();
 
-        Ok(hash)
+        Ok(Encrypted::from(hash))
     }
 
     pub fn verify(&self, hash: &str) -> KyResult<bool> {
@@ -92,8 +92,8 @@ impl Password {
     }
 }
 
-impl Display for Password {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.raw)
+impl AsRef<str> for Password {
+    fn as_ref(&self) -> &str {
+        &self.raw
     }
 }

@@ -4,7 +4,8 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER,
+        Cipher, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
+        MASTER,
     },
 };
 use clap::Clap;
@@ -35,13 +36,14 @@ impl Command for Add {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
         if !master_pwd.verify(&hashed)? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master_pwd);
+        let key = key_cipher.encrypt(&self.key.as_ref())?;
 
         if pwd_db.get(&rtxn, &key).is_ok() {
             return Err(KyError::Exist);
@@ -56,10 +58,10 @@ impl Command for Add {
 
         let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let new_pass = Password::generate(&self.pwd_opt).to_string();
+        let new_pass = Password::generate(&self.pwd_opt);
 
         let encrypted = Details {
-            password: new_pass,
+            password: new_pass.as_ref().to_string(),
             username,
             website,
             expires,

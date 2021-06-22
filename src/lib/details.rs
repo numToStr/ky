@@ -1,4 +1,4 @@
-use super::{Cipher, KyResult};
+use super::{Cipher, Encrypted, KyResult};
 use std::fmt::{self, Display, Formatter};
 
 pub const DELIM: char = ':';
@@ -24,7 +24,7 @@ macro_rules! dehexed {
 macro_rules! hexed {
     ($k: expr) => {{
         match $k.as_str() {
-            "" => $k.to_string(),
+            "" => $k,
             x => hex::encode(x),
         }
     }};
@@ -40,8 +40,8 @@ pub struct Details {
 }
 
 impl Details {
-    pub fn encrypt(&self, cipher: &Cipher) -> KyResult<String> {
-        let password = hexed!(cipher.encrypt(&self.password)?);
+    pub fn encrypt(self, cipher: &Cipher) -> KyResult<Encrypted> {
+        let password = hexed!(String::from(cipher.encrypt(&self.password)?));
         let username = hexed!(self.username);
         let website = hexed!(self.website);
         let expires = hexed!(self.expires);
@@ -60,7 +60,7 @@ impl Details {
     }
 
     pub fn decrypt(cipher: &Cipher, encrypted: &str) -> KyResult<Self> {
-        let decrypted = cipher.decrypt(&encrypted)?;
+        let decrypted: String = cipher.decrypt(&encrypted)?.into();
 
         let mut keys = decrypted.splitn(5, DELIM);
 
