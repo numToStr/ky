@@ -51,10 +51,10 @@ impl Cipher {
         Ok(Self { cipher, nonce })
     }
 
-    pub fn encrypt(&self, data: &str) -> KyResult<Encrypted> {
+    pub fn encrypt(&self, data: &Decrypted) -> KyResult<Encrypted> {
         let cipher_txt = self
             .cipher
-            .encrypt(&self.nonce, data.as_bytes())
+            .encrypt(&self.nonce, data.as_ref().as_bytes())
             .map_err(|_| KyError::Encrypt)?;
 
         let encrypted = hex::encode(&cipher_txt);
@@ -62,8 +62,8 @@ impl Cipher {
         Ok(Encrypted::from(encrypted))
     }
 
-    pub fn decrypt(&self, encrypted: &str) -> KyResult<Decrypted> {
-        let slice = hex::decode(encrypted).map_err(|_| KyError::Decrypt)?;
+    pub fn decrypt(&self, encrypted: &Encrypted) -> KyResult<Decrypted> {
+        let slice = hex::decode(encrypted.as_ref()).map_err(|_| KyError::Decrypt)?;
 
         let decrypted = self
             .cipher

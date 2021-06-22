@@ -1,4 +1,4 @@
-use super::{Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER};
+use super::{Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER};
 use crate::lib::{Cipher, Password};
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
@@ -62,13 +62,13 @@ impl<'a> Vault<'a> {
     pub fn export(
         dest: &'a Path,
         master_pwd: &Password,
-        entries: Vec<(String, String)>,
+        entries: Vec<(Encrypted, Encrypted)>,
     ) -> KyResult<()> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
         let key_cipher = Cipher::for_key(master_pwd);
 
         for (k, v) in entries.into_iter() {
-            let key = key_cipher.decrypt(&k.as_ref())?.into();
+            let key = key_cipher.decrypt(&k)?.into();
             let cipher = Cipher::for_value(master_pwd, &key)?;
             let val = Details::decrypt(&cipher, &v)?;
             let key_ref = key.as_ref().to_string();
@@ -77,7 +77,7 @@ impl<'a> Vault<'a> {
                 title: key,
                 website: val.website,
                 username: val.username,
-                password: cipher.decrypt(&val.password)?.into(),
+                password: cipher.decrypt(&Encrypted::from(val.password))?.into(),
                 notes: val.notes,
                 expires: val.expires,
             })
@@ -117,7 +117,7 @@ impl<'a> Vault<'a> {
             }
             .encrypt(&cipher)?;
 
-            let key = key_cipher.encrypt(&k.title.as_ref())?;
+            let key = key_cipher.encrypt(&Decrypted::from(&k.title))?;
 
             pwd_db.set(&mut wtxn, &key, &val)?;
         }

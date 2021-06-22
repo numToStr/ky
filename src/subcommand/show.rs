@@ -3,8 +3,8 @@ use crate::{
     check_db,
     cli::Config,
     lib::{
-        Cipher, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
-        Qr, MASTER,
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Password, Prompt, Qr, MASTER,
     },
 };
 use clap::Clap;
@@ -47,12 +47,12 @@ impl Command for Show {
         let rtxn = env.read_txn()?;
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
         let key_cipher = Cipher::for_key(&master_pwd);
-        let key = key_cipher.encrypt(&self.key.as_ref())?;
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
@@ -72,7 +72,7 @@ impl Command for Show {
         // I tried and I failed, maybe next time
 
         let password = if self.clear || self.qr_code {
-            Some(cipher.decrypt(&val.password)?)
+            Some(cipher.decrypt(&Encrypted::from(val.password))?)
         } else {
             None
         };

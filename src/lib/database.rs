@@ -60,11 +60,11 @@ impl KyDb {
     }
 
     /// Retrieve a key-val pair from the databse
-    pub fn get(&self, rtxn: &RoTxn, key: &Encrypted) -> KyResult<String> {
+    pub fn get(&self, rtxn: &RoTxn, key: &Encrypted) -> KyResult<Encrypted> {
         let bytes = self.db.get(&rtxn, key.as_ref()).map_err(|_| KyError::Get)?;
 
         match bytes {
-            Some(x) => Ok(x.to_string()),
+            Some(x) => Ok(Encrypted::from(x)),
             _ => Err(KyError::NotFound),
         }
     }
@@ -80,14 +80,14 @@ impl KyDb {
     }
 
     /// Retrieve all the key-val pair in the databse
-    pub fn ls(&self, rtxn: &RoTxn) -> KyResult<Vec<(String, String)>> {
-        let mut keys: Vec<(String, String)> = Vec::new();
+    pub fn ls(&self, rtxn: &RoTxn) -> KyResult<Vec<(Encrypted, Encrypted)>> {
+        let mut keys: Vec<(Encrypted, Encrypted)> = Vec::new();
 
         for kv in self.db.iter(rtxn)? {
             let (k, v) = kv?;
 
             if k != MASTER {
-                keys.push((k.to_string(), v.to_string()));
+                keys.push((Encrypted::from(k), Encrypted::from(v)));
             }
         }
 

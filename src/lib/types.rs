@@ -76,3 +76,9 @@ impl From<Decrypted> for EntryKey {
         Self(s.0)
     }
 }
+
+impl From<&EntryKey> for Decrypted {
+    fn from(s: &EntryKey) -> Self {
+        Self(s.0.to_owned())
+    }
+}

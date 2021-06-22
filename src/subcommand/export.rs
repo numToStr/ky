@@ -40,7 +40,7 @@ impl Command for Export {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 

@@ -40,7 +40,7 @@ impl Command for Backup {
 
         env.close();
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 

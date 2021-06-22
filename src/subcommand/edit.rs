@@ -4,8 +4,8 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        Cipher, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
-        MASTER, PREFIX,
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Password, Prompt, MASTER, PREFIX,
     },
 };
 use clap::Clap;
@@ -42,12 +42,12 @@ impl Command for Edit {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
         let key_cipher = Cipher::for_key(&master_pwd);
-        let key = key_cipher.encrypt(&self.key.as_ref())?;
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let encrypted = pwd_db.get(&rtxn, &key)?;
 
@@ -72,7 +72,7 @@ impl Command for Edit {
             println!("{} Password regenerated", style(PREFIX).bold());
             p.as_ref().to_string()
         } else {
-            let p = cipher.decrypt(&old_val.password)?;
+            let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
             p.as_ref().to_string()
         };
 

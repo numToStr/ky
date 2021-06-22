@@ -4,8 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        Cipher, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt,
-        MASTER,
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Password, Prompt, MASTER,
     },
 };
 use clap::Clap;
@@ -37,7 +37,7 @@ impl Command for Move {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
@@ -45,11 +45,11 @@ impl Command for Move {
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let old_key = key_cipher.encrypt(&self.old_key.as_ref())?;
+        let old_key = key_cipher.encrypt(&Decrypted::from(&self.old_key))?;
         let encrypted = pwd_db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
-        let new_key = key_cipher.encrypt(&self.new_key.as_ref())?;
+        let new_key = key_cipher.encrypt(&Decrypted::from(&self.new_key))?;
         if pwd_db.get(&rtxn, &new_key).is_ok() {
             return Err(KyError::Exist);
         }
@@ -64,7 +64,9 @@ impl Command for Move {
         println!("- Encrypting new details...");
         let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
         let new_val = Details {
-            password: old_cipher.decrypt(&old_val.password)?.into(),
+            password: old_cipher
+                .decrypt(&Encrypted::from(old_val.password))?
+                .into(),
             username: old_val.username,
             website: old_val.website,
             expires: old_val.expires,

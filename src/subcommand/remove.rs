@@ -4,7 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        Cipher, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER,
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password,
+        Prompt, MASTER,
     },
 };
 use clap::Clap;
@@ -33,12 +34,12 @@ impl Command for Remove {
         let rtxn = env.read_txn()?;
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
         let key_cipher = Cipher::for_key(&master_pwd);
-        let key = key_cipher.encrypt(&self.key.as_ref())?;
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let _ = pwd_db.get(&rtxn, &key)?;
 
