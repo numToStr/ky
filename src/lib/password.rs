@@ -12,7 +12,7 @@ const MEM: u32 = 1024 * 128; // 128MB
 const CHARSET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Password {
     raw: String,
 }
