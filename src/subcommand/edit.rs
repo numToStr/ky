@@ -5,8 +5,8 @@ use crate::{
     echo,
     lib::{
         entity::{Master, Password},
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt,
-        MASTER, PREFIX,
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+        PREFIX,
     },
 };
 use clap::Clap;
@@ -61,7 +61,7 @@ impl Command for Edit {
 
         let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let old_val = Details::decrypt(&cipher, &encrypted)?;
+        let old_val = Password::decrypt(&cipher, &encrypted)?;
 
         let username = Prompt::username_with_default(&theme, old_val.username)?;
         let website = Prompt::website_with_default(&theme, old_val.website)?;
@@ -77,7 +77,7 @@ impl Command for Edit {
             p.as_ref().to_string()
         };
 
-        let new_val = Details {
+        let new_val = Password {
             password,
             username,
             website,

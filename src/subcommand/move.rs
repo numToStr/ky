@@ -4,8 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        entity::Master, Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult,
-        KyTable, Prompt, MASTER,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
     },
 };
 use clap::Clap;
@@ -59,11 +59,11 @@ impl Command for Move {
         echo!("- Decrypting old details...");
         let old_cipher = Cipher::for_value(&master, &self.old_key)?;
 
-        let old_val = Details::decrypt(&old_cipher, &encrypted)?;
+        let old_val = Password::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
         let new_cipher = Cipher::for_value(&master, &self.new_key)?;
-        let new_val = Details {
+        let new_val = Password {
             password: old_cipher
                 .decrypt(&Encrypted::from(old_val.password))?
                 .into(),

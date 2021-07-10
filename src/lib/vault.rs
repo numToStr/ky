@@ -1,6 +1,6 @@
 use super::{
-    entity::Master, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-    MASTER,
+    entity::{Master, Password},
+    Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER,
 };
 use crate::lib::Cipher;
 use csv::{Reader, Writer};
@@ -73,7 +73,7 @@ impl<'a> Vault<'a> {
         for (k, v) in entries.into_iter() {
             let key = key_cipher.decrypt(&k)?.into();
             let cipher = Cipher::for_value(master, &key)?;
-            let val = Details::decrypt(&cipher, &v)?;
+            let val = Password::decrypt(&cipher, &v)?;
             let key_ref = key.as_ref().to_string();
 
             wtr.serialize(Row {
@@ -110,7 +110,7 @@ impl<'a> Vault<'a> {
 
             let cipher = Cipher::for_value(&master, &k.title)?;
 
-            let val = Details {
+            let val = Password {
                 username: k.username,
                 password: k.password,
                 website: k.website,
