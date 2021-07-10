@@ -3,7 +3,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, Vault, MASTER},
+    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, Vault, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -27,7 +27,7 @@ impl Command for Backup {
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
         let common_db = env.get_table(KyTable::Common)?;
@@ -40,7 +40,7 @@ impl Command for Backup {
 
         env.close();
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 

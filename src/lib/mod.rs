@@ -1,6 +1,7 @@
 mod cipher;
 mod database;
 mod details;
+pub mod entity;
 mod error;
 mod git;
 mod password;

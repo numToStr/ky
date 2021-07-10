@@ -3,8 +3,8 @@ use crate::{
     check_db,
     cli::Config,
     lib::{
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Password, Prompt, Qr, MASTER,
+        entity::Master, Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult,
+        KyTable, Prompt, Qr, MASTER,
     },
 };
 use clap::Clap;
@@ -37,7 +37,7 @@ impl Command for Show {
 
         check_db!(db_path);
 
-        let master_pwd = Password::ask_master(&Prompt::theme())?;
+        let master_pwd = Master::ask(&Prompt::theme())?;
 
         let env = KyEnv::connect(&db_path)?;
 

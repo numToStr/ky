@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
+    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -17,9 +17,9 @@ impl Command for Init {
             return Err(KyError::Init);
         }
 
-        let password = Password::init(&Prompt::theme())?;
+        let master = Master::new(&Prompt::theme())?;
 
-        let hashed = password.hash()?;
+        let hashed = master.hash()?;
 
         let env = KyEnv::connect(config.ensure_create(&db_path))?;
 

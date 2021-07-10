@@ -1,5 +1,8 @@
-use super::{Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER};
-use crate::lib::{Cipher, Password};
+use super::{
+    entity::Master, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+    MASTER,
+};
+use crate::lib::Cipher;
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
@@ -61,15 +64,15 @@ impl<'a> Vault<'a> {
 
     pub fn export(
         dest: &'a Path,
-        master_pwd: &Password,
+        master: &Master,
         entries: Vec<(Encrypted, Encrypted)>,
     ) -> KyResult<()> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
-        let key_cipher = Cipher::for_key(master_pwd);
+        let key_cipher = Cipher::for_key(master);
 
         for (k, v) in entries.into_iter() {
             let key = key_cipher.decrypt(&k)?.into();
-            let cipher = Cipher::for_value(master_pwd, &key)?;
+            let cipher = Cipher::for_value(master, &key)?;
             let val = Details::decrypt(&cipher, &v)?;
             let key_ref = key.as_ref().to_string();
 
@@ -87,7 +90,7 @@ impl<'a> Vault<'a> {
         Ok(())
     }
 
-    pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> KyResult<()> {
+    pub fn import(src: &Path, master: &Master, env: &KyEnv) -> KyResult<()> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
@@ -96,16 +99,16 @@ impl<'a> Vault<'a> {
 
         let mut wtxn = env.write_txn()?;
 
-        let hashed = master_pwd.hash()?;
+        let hashed = master.hash()?;
 
         common_db.set(&mut wtxn, &Encrypted::from(MASTER), &hashed)?;
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_key(&master);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::for_value(&master_pwd, &k.title)?;
+            let cipher = Cipher::for_value(&master, &k.title)?;
 
             let val = Details {
                 username: k.username,
