@@ -39,11 +39,11 @@ impl Prompt {
             .interact_text()?;
 
         let new_input = match input.as_str() {
-            EMPTY => "",
-            x => x,
+            EMPTY => String::default(),
+            _ => input,
         };
 
-        Ok(new_input.to_string())
+        Ok(new_input)
     }
 
     #[inline]
@@ -54,11 +54,11 @@ impl Prompt {
             .interact_text()?;
 
         let new_input = match input.as_str() {
-            EMPTY => "",
-            x => x,
+            EMPTY => String::default(),
+            _ => input,
         };
 
-        Ok(new_input.to_string())
+        Ok(new_input)
     }
 
     #[inline]
