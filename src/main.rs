@@ -1,11 +1,13 @@
-use dialoguer::console::style;
-
 mod cli;
 mod lib;
 mod subcommand;
 
+use clap::Clap;
+use cli::Cli;
+use dialoguer::console::style;
+
 fn main() {
-    let app = cli::parse();
+    let app = Cli::parse();
 
     let code = match app.cmd.exec(app.config) {
         Ok(_) => 0,
