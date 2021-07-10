@@ -87,7 +87,6 @@ impl<'a> Vault<'a> {
         Ok(())
     }
 
-    #[inline]
     pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> KyResult<()> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
