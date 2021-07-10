@@ -4,7 +4,7 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, Vault, MASTER},
+    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, Vault, MASTER},
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -30,7 +30,7 @@ impl Command for Export {
 
         let theme = Prompt::theme();
 
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
         let common_db = env.get_table(KyTable::Common)?;
@@ -40,7 +40,7 @@ impl Command for Export {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
@@ -59,7 +59,7 @@ impl Command for Export {
             return Ok(());
         }
 
-        Vault::export(&export_path, &master_pwd, keys)?;
+        Vault::export(&export_path, &master, keys)?;
 
         echo!("> Vault exported: {}", style(export_path.display()).bold());
 

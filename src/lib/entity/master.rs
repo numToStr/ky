@@ -1,24 +1,20 @@
-use super::{Encrypted, KyError, KyResult};
-use crate::cli::PasswordParams;
 use argon2::{
     password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier, Version,
 };
 use dialoguer::theme::Theme;
-use rand::{rngs::OsRng, thread_rng, Rng};
+use rand::rngs::OsRng;
+
+use crate::lib::{Encrypted, KyError, KyResult};
 
 const ITR: u32 = 3;
 const MEM: u32 = 1024 * 128; // 128MB
 
-const CHARSET: &[u8] =
-    b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
-
-#[derive(Debug)]
-pub struct Password {
+pub struct Master {
     raw: String,
 }
 
-impl Password {
-    pub fn init(theme: &impl Theme) -> KyResult<Self> {
+impl Master {
+    pub fn new(theme: &impl Theme) -> KyResult<Self> {
         let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("New master password")
             .with_confirmation("Retype to verify", "Passwords didn't match")
@@ -27,7 +23,7 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn ask_master(theme: &impl Theme) -> KyResult<Self> {
+    pub fn ask(theme: &impl Theme) -> KyResult<Self> {
         let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("Enter master password")
             .interact()?;
@@ -35,13 +31,21 @@ impl Password {
         Ok(Self { raw })
     }
 
-    pub fn hash(&self) -> KyResult<Encrypted> {
+    #[inline]
+    fn argon() -> KyResult<Argon2<'static>> {
         let pll = num_cpus::get() as u32;
-        let salt = SaltString::generate(&mut OsRng);
 
         // TODO: first arg can be replace by a key file
         let argon = Argon2::new(None, ITR, MEM, pll, Version::default())
             .map_err(|e| KyError::Any(e.to_string()))?;
+
+        Ok(argon)
+    }
+
+    pub fn hash(&self) -> KyResult<Encrypted> {
+        let salt = SaltString::generate(&mut OsRng);
+
+        let argon = Self::argon()?;
 
         let hash = argon
             .hash_password_simple(self.raw.as_bytes(), salt.as_ref())
@@ -54,7 +58,7 @@ impl Password {
     pub fn verify(&self, hash: &str) -> KyResult<bool> {
         let parsed_hash = PasswordHash::new(hash).map_err(|_| KyError::PwdVerify)?;
 
-        let argon = Argon2::default();
+        let argon = Self::argon()?;
 
         let is_verified = argon
             .verify_password(self.raw.as_bytes(), &parsed_hash)
@@ -62,37 +66,9 @@ impl Password {
 
         Ok(is_verified)
     }
-
-    pub fn generate(opts: &PasswordParams) -> Self {
-        let charset: Vec<u8> = match &opts.exclude {
-            Some(x) => {
-                let exclude_bytes = x.as_bytes();
-
-                CHARSET
-                    .to_vec()
-                    .into_iter()
-                    .filter(|c| !exclude_bytes.contains(c))
-                    .collect()
-            }
-            _ => CHARSET.to_vec(),
-        };
-
-        let mut rng = thread_rng();
-
-        let len = charset.len();
-
-        let raw: String = (0..opts.length)
-            .map(|_| {
-                let idx = rng.gen_range(0..len);
-                charset[idx] as char
-            })
-            .collect();
-
-        Self { raw }
-    }
 }
 
-impl AsRef<str> for Password {
+impl AsRef<str> for Master {
     fn as_ref(&self) -> &str {
         &self.raw
     }

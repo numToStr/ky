@@ -4,8 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Password, Prompt, MASTER,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
     },
 };
 use clap::Clap;
@@ -26,7 +26,7 @@ impl Command for Move {
 
         check_db!(db_path);
 
-        let master_pwd = Password::ask_master(&Prompt::theme())?;
+        let master = Master::ask(&Prompt::theme())?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -37,11 +37,11 @@ impl Command for Move {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_key(&master);
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
@@ -57,13 +57,13 @@ impl Command for Move {
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_cipher = Cipher::for_value(&master_pwd, &self.old_key)?;
+        let old_cipher = Cipher::for_value(&master, &self.old_key)?;
 
-        let old_val = Details::decrypt(&old_cipher, &encrypted)?;
+        let old_val = Password::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::for_value(&master_pwd, &self.new_key)?;
-        let new_val = Details {
+        let new_cipher = Cipher::for_value(&master, &self.new_key)?;
+        let new_val = Password {
             password: old_cipher
                 .decrypt(&Encrypted::from(old_val.password))?
                 .into(),

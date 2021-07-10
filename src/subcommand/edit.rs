@@ -4,8 +4,9 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Password, Prompt, MASTER, PREFIX,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+        PREFIX,
     },
 };
 use clap::Clap;
@@ -31,7 +32,7 @@ impl Command for Edit {
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -42,11 +43,11 @@ impl Command for Edit {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_key(&master);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let encrypted = pwd_db.get(&rtxn, &key)?;
@@ -58,9 +59,9 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
+        let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let old_val = Details::decrypt(&cipher, &encrypted)?;
+        let old_val = Password::decrypt(&cipher, &encrypted)?;
 
         let username = Prompt::username_with_default(&theme, old_val.username)?;
         let website = Prompt::website_with_default(&theme, old_val.website)?;
@@ -70,13 +71,13 @@ impl Command for Edit {
         let password = if self.password {
             let p = Password::generate(&self.pwd_opt);
             println!("{} Password regenerated", style(PREFIX).bold());
-            p.as_ref().to_string()
+            p
         } else {
             let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
             p.as_ref().to_string()
         };
 
-        let new_val = Details {
+        let new_val = Password {
             password,
             username,
             website,

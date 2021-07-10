@@ -3,8 +3,9 @@ use crate::{
     check_db,
     cli::Config,
     lib::{
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Password, Prompt, Qr, MASTER,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, Qr,
+        MASTER,
     },
 };
 use clap::Clap;
@@ -37,7 +38,7 @@ impl Command for Show {
 
         check_db!(db_path);
 
-        let master_pwd = Password::ask_master(&Prompt::theme())?;
+        let master_pwd = Master::ask(&Prompt::theme())?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -64,7 +65,7 @@ impl Command for Show {
 
         let cipher = Cipher::for_value(&master_pwd, &self.key)?;
 
-        let val = Details::decrypt(&cipher, &encrypted)?;
+        let val = Password::decrypt(&cipher, &encrypted)?;
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value

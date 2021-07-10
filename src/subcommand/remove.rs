@@ -4,7 +4,7 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Password,
+        entity::Master, Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
         Prompt, MASTER,
     },
 };
@@ -24,7 +24,7 @@ impl Command for Remove {
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -34,11 +34,11 @@ impl Command for Remove {
         let rtxn = env.read_txn()?;
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_key(&master);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let _ = pwd_db.get(&rtxn, &key)?;

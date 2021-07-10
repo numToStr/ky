@@ -4,8 +4,8 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Password, Prompt, MASTER,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
     },
 };
 use clap::Clap;
@@ -27,7 +27,7 @@ impl Command for Add {
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -38,11 +38,11 @@ impl Command for Add {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_key(&master);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         if pwd_db.get(&rtxn, &key).is_ok() {
@@ -56,12 +56,12 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
+        let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let new_pass = Password::generate(&self.pwd_opt);
+        let password = Password::generate(&self.pwd_opt);
 
-        let encrypted = Details {
-            password: new_pass.as_ref().to_string(),
+        let encrypted = Password {
+            password,
             username,
             website,
             expires,
