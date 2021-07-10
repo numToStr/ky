@@ -4,8 +4,9 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        entity::Master, Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult,
-        KyTable, Password, Prompt, MASTER, PREFIX,
+        entity::{Master, Password},
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt,
+        MASTER, PREFIX,
     },
 };
 use clap::Clap;
@@ -70,7 +71,7 @@ impl Command for Edit {
         let password = if self.password {
             let p = Password::generate(&self.pwd_opt);
             println!("{} Password regenerated", style(PREFIX).bold());
-            p.as_ref().to_string()
+            p
         } else {
             let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
             p.as_ref().to_string()

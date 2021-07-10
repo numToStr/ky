@@ -4,8 +4,9 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        entity::Master, Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult,
-        KyTable, Password, Prompt, MASTER,
+        entity::{Master, Password},
+        Cipher, Decrypted, Details, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt,
+        MASTER,
     },
 };
 use clap::Clap;
@@ -58,10 +59,10 @@ impl Command for Add {
 
         let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let new_pass = Password::generate(&self.pwd_opt);
+        let password = Password::generate(&self.pwd_opt);
 
         let encrypted = Details {
-            password: new_pass.as_ref().to_string(),
+            password,
             username,
             website,
             expires,

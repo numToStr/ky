@@ -6,12 +6,10 @@ const CHARSET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789)(*&^%$#@!~`-_+=><.,:;'\"[]{}?/\\|";
 
 #[derive(Debug)]
-pub struct Password {
-    raw: String,
-}
+pub struct Password;
 
 impl Password {
-    pub fn generate(opts: &PasswordParams) -> Self {
+    pub fn generate(opts: &PasswordParams) -> String {
         let charset: Vec<u8> = match &opts.exclude {
             Some(x) => {
                 let exclude_bytes = x.as_bytes();
@@ -29,19 +27,13 @@ impl Password {
 
         let len = charset.len();
 
-        let raw: String = (0..opts.length)
+        let pwd: String = (0..opts.length)
             .map(|_| {
                 let idx = rng.gen_range(0..len);
                 charset[idx] as char
             })
             .collect();
 
-        Self { raw }
-    }
-}
-
-impl AsRef<str> for Password {
-    fn as_ref(&self) -> &str {
-        &self.raw
+        pwd
     }
 }
