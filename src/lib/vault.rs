@@ -1,5 +1,8 @@
-use super::{key::EntryKey, Details, KyEnv, KyError, KyTable, MASTER};
-use crate::lib::{Cipher, Password};
+use super::{
+    entity::{Master, Password},
+    Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, MASTER,
+};
+use crate::lib::Cipher;
 use csv::{Reader, Writer};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::Path};
@@ -25,7 +28,7 @@ impl<'a> Vault<'a> {
         Self { src }
     }
 
-    pub fn backup(&self, dest: &'a Path) -> Result<File, KyError> {
+    pub fn backup(&self, dest: &'a Path) -> KyResult<File> {
         let mut tar = tar::Builder::new(Vec::new());
 
         tar.append_dir_all(".", self.src)?;
@@ -46,7 +49,7 @@ impl<'a> Vault<'a> {
         Ok(f)
     }
 
-    pub fn restore(&self, dest: &'a Path) -> Result<(), KyError> {
+    pub fn restore(&self, dest: &'a Path) -> KyResult<()> {
         let decoder = {
             let file = File::open(self.src)?;
             zstd::Decoder::new(file)?
@@ -61,23 +64,23 @@ impl<'a> Vault<'a> {
 
     pub fn export(
         dest: &'a Path,
-        master_pwd: &Password,
-        entries: Vec<(String, String)>,
-    ) -> Result<(), KyError> {
+        master: &Master,
+        entries: Vec<(Encrypted, Encrypted)>,
+    ) -> KyResult<()> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
-        let key_cipher = Cipher::for_key(master_pwd);
+        let key_cipher = Cipher::for_key(master);
 
         for (k, v) in entries.into_iter() {
-            let key = key_cipher.decrypt(&k.as_ref())?.into();
-            let cipher = Cipher::for_value(master_pwd, &key)?;
-            let val = Details::decrypt(&cipher, &v)?;
+            let key = key_cipher.decrypt(&k)?.into();
+            let cipher = Cipher::for_value(master, &key)?;
+            let val = Password::decrypt(&cipher, &v)?;
             let key_ref = key.as_ref().to_string();
 
             wtr.serialize(Row {
                 title: key,
                 website: val.website,
                 username: val.username,
-                password: cipher.decrypt(&val.password)?,
+                password: cipher.decrypt(&Encrypted::from(val.password))?.into(),
                 notes: val.notes,
                 expires: val.expires,
             })
@@ -87,8 +90,7 @@ impl<'a> Vault<'a> {
         Ok(())
     }
 
-    #[inline]
-    pub fn import(src: &Path, master_pwd: &Password, env: &KyEnv) -> Result<(), KyError> {
+    pub fn import(src: &Path, master: &Master, env: &KyEnv) -> KyResult<()> {
         let mut rdr = Reader::from_path(src).map_err(|_| KyError::ImportRead)?;
         let iter = rdr.deserialize();
 
@@ -97,16 +99,18 @@ impl<'a> Vault<'a> {
 
         let mut wtxn = env.write_txn()?;
 
-        common_db.set(&mut wtxn, MASTER, &master_pwd.hash()?)?;
+        let hashed = master.hash()?;
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        common_db.set(&mut wtxn, &Encrypted::from(MASTER), &hashed)?;
+
+        let key_cipher = Cipher::for_key(&master);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::for_value(&master_pwd, &k.title)?;
+            let cipher = Cipher::for_value(&master, &k.title)?;
 
-            let val = Details {
+            let val = Password {
                 username: k.username,
                 password: k.password,
                 website: k.website,
@@ -115,9 +119,9 @@ impl<'a> Vault<'a> {
             }
             .encrypt(&cipher)?;
 
-            let key = key_cipher.encrypt(&k.title.as_ref())?;
+            let key = key_cipher.encrypt(&Decrypted::from(&k.title))?;
 
-            pwd_db.set(&mut wtxn, &key, &val.to_string())?;
+            pwd_db.set(&mut wtxn, &key, &val)?;
         }
 
         wtxn.commit()?;

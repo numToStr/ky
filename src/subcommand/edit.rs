@@ -4,7 +4,9 @@ use crate::{
     cli::{Config, PasswordParams},
     echo,
     lib::{
-        key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER, PREFIX,
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+        PREFIX,
     },
 };
 use clap::Clap;
@@ -24,13 +26,13 @@ pub struct Edit {
 }
 
 impl Command for Edit {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -39,13 +41,14 @@ impl Command for Edit {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master);
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let encrypted = pwd_db.get(&rtxn, &key)?;
 
@@ -56,9 +59,9 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
+        let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let old_val = Details::decrypt(&cipher, &encrypted)?;
+        let old_val = Password::decrypt(&cipher, &encrypted)?;
 
         let username = Prompt::username_with_default(&theme, old_val.username)?;
         let website = Prompt::website_with_default(&theme, old_val.website)?;
@@ -66,14 +69,15 @@ impl Command for Edit {
         let notes = Prompt::notes_with_default(&theme, old_val.notes)?;
 
         let password = if self.password {
-            let p = cipher.encrypt(&Password::generate(&self.pwd_opt).to_string())?;
+            let p = Password::generate(&self.pwd_opt);
             println!("{} Password regenerated", style(PREFIX).bold());
             p
         } else {
-            cipher.decrypt(&old_val.password)?
+            let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
+            p.as_ref().to_string()
         };
 
-        let new_val = Details {
+        let new_val = Password {
             password,
             username,
             website,

@@ -1,7 +1,7 @@
 use crate::{
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, Password, Prompt, Vault},
+    lib::{entity::Master, KyEnv, KyError, KyResult, Prompt, Vault},
 };
 use clap::Clap;
 
@@ -21,7 +21,7 @@ pub struct Import {
 }
 
 impl Command for Import {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let import_path = match &self.path {
             Some(p) => p.to_path_buf(),
             _ => config.export_path(),
@@ -40,7 +40,7 @@ impl Command for Import {
             return Ok(());
         }
 
-        let master_pwd = Password::init(&theme)?;
+        let master = Master::new(&theme)?;
 
         if db_exist {
             remove_dir_all(&db_path)?;
@@ -48,7 +48,7 @@ impl Command for Import {
 
         let env = KyEnv::connect(config.ensure_create(&db_path))?;
 
-        Vault::import(&import_path, &master_pwd, &env)?;
+        Vault::import(&import_path, &master, &env)?;
 
         env.close();
 

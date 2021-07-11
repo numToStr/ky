@@ -1,4 +1,4 @@
-use super::{key::EntryKey, KyError, Password};
+use super::{entity::Master, Decrypted, Encrypted, EntryKey, KyError, KyResult};
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
@@ -13,11 +13,7 @@ pub struct Cipher {
 
 impl Cipher {
     #[inline]
-    fn make_key<const T: usize>(
-        master: &[u8],
-        key: &[u8],
-        data: &[u8],
-    ) -> Result<[u8; T], KyError> {
+    fn make_key<const T: usize>(master: &[u8], key: &[u8], data: &[u8]) -> KyResult<[u8; T]> {
         let h = Hkdf::<Sha256>::new(Some(key), master);
         let mut okm = [0u8; T];
         h.expand(data, &mut okm)
@@ -25,8 +21,8 @@ impl Cipher {
         Ok(okm)
     }
 
-    pub fn for_key(master: &Password) -> Self {
-        let master_sha = Sha256::digest(master.to_string().as_bytes());
+    pub fn for_key(master: &Master) -> Self {
+        let master_sha = Sha256::digest(master.as_ref().as_bytes());
         let master_key = Key::from_slice(&master_sha);
         let cipher = Aes256GcmSiv::new(master_key);
 
@@ -37,9 +33,8 @@ impl Cipher {
         Self { cipher, nonce }
     }
 
-    pub fn for_value(master: &Password, key: &EntryKey) -> Result<Self, KyError> {
-        let m = master.to_string();
-        let master_bytes = m.as_bytes();
+    pub fn for_value(master: &Master, key: &EntryKey) -> KyResult<Self> {
+        let master_bytes = master.as_ref().as_bytes();
         let key_bytes = key.as_ref().as_bytes();
 
         let first_pass = Self::make_key::<256>(master_bytes, key_bytes, &[])?;
@@ -56,27 +51,27 @@ impl Cipher {
         Ok(Self { cipher, nonce })
     }
 
-    pub fn encrypt(&self, data: &str) -> Result<String, KyError> {
+    pub fn encrypt(&self, data: &Decrypted) -> KyResult<Encrypted> {
         let cipher_txt = self
             .cipher
-            .encrypt(&self.nonce, data.as_bytes())
+            .encrypt(&self.nonce, data.as_ref().as_bytes())
             .map_err(|_| KyError::Encrypt)?;
 
-        let pwd_encrypted = hex::encode(&cipher_txt);
+        let encrypted = hex::encode(&cipher_txt);
 
-        Ok(pwd_encrypted)
+        Ok(Encrypted::from(encrypted))
     }
 
-    pub fn decrypt(&self, encrypted: &str) -> Result<String, KyError> {
-        let slice = hex::decode(encrypted).map_err(|_| KyError::Decrypt)?;
+    pub fn decrypt(&self, encrypted: &Encrypted) -> KyResult<Decrypted> {
+        let slice = hex::decode(encrypted.as_ref()).map_err(|_| KyError::Decrypt)?;
 
         let decrypted = self
             .cipher
             .decrypt(&self.nonce, &slice as &[u8])
             .map_err(|_| KyError::Decrypt)?;
 
-        let pwd_decrypted = String::from_utf8(decrypted).map_err(|_| KyError::Decrypt)?;
+        let decrypted = String::from_utf8(decrypted).map_err(|_| KyError::Decrypt)?;
 
-        Ok(pwd_decrypted)
+        Ok(Decrypted::from(decrypted))
     }
 }

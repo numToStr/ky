@@ -17,7 +17,3 @@ pub struct Cli {
     #[clap(subcommand)]
     pub cmd: SubCommand,
 }
-
-pub fn parse() -> Cli {
-    Cli::parse()
-}

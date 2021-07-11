@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -10,16 +10,16 @@ use clap::Clap;
 pub struct Init;
 
 impl Command for Init {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         if db_path.exists() {
             return Err(KyError::Init);
         }
 
-        let password = Password::init(&Prompt::theme())?;
+        let master = Master::new(&Prompt::theme())?;
 
-        let hashed = password.hash()?;
+        let hashed = master.hash()?;
 
         let env = KyEnv::connect(config.ensure_create(&db_path))?;
 
@@ -27,7 +27,7 @@ impl Command for Init {
 
         let mut txn = env.write_txn()?;
 
-        common_db.set(&mut txn, MASTER, &hashed)?;
+        common_db.set(&mut txn, &Encrypted::from(MASTER), &hashed)?;
 
         txn.commit()?;
 

@@ -98,3 +98,5 @@ impl From<heed::Error> for KyError {
         Self::Any(s.to_string())
     }
 }
+
+pub type KyResult<T> = Result<T, KyError>;

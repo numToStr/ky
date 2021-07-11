@@ -3,7 +3,10 @@ use crate::{
     check_db,
     cli::Config,
     echo,
-    lib::{key::EntryKey, Cipher, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{
+        entity::Master, Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
+        Prompt, MASTER,
+    },
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -15,13 +18,13 @@ pub struct Remove {
 }
 
 impl Command for Remove {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -29,13 +32,14 @@ impl Command for Remove {
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master);
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let _ = pwd_db.get(&rtxn, &key)?;
 

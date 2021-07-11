@@ -1,6 +1,6 @@
 use crate::{
     cli::{Config, PasswordParams},
-    lib::{KyError, Password, Qr},
+    lib::{entity::Password, KyResult, Qr},
     subcommand::Command,
 };
 use clap::Clap;
@@ -20,11 +20,11 @@ pub struct Generate {
 }
 
 impl Command for Generate {
-    fn exec(&self, _: Config) -> Result<(), KyError> {
+    fn exec(&self, _: Config) -> KyResult<()> {
         let password = Password::generate(&self.pwd_opt);
 
         if self.qr_code {
-            let code = Qr::new(&password.to_string())?.render();
+            let code = Qr::new(&password)?.render();
             eprint!("{}", code);
         }
 

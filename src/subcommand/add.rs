@@ -3,7 +3,10 @@ use crate::{
     check_db,
     cli::{Config, PasswordParams},
     echo,
-    lib::{key::EntryKey, Cipher, Details, KyEnv, KyError, KyTable, Password, Prompt, MASTER},
+    lib::{
+        entity::{Master, Password},
+        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+    },
 };
 use clap::Clap;
 use dialoguer::console::style;
@@ -18,13 +21,13 @@ pub struct Add {
 }
 
 impl Command for Add {
-    fn exec(&self, config: Config) -> Result<(), KyError> {
+    fn exec(&self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master_pwd = Password::ask_master(&theme)?;
+        let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -33,13 +36,14 @@ impl Command for Add {
 
         let rtxn = env.read_txn()?;
 
-        let hashed = common_db.get(&rtxn, MASTER)?;
+        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(&hashed)? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key = Cipher::for_key(&master_pwd).encrypt(&self.key.as_ref())?;
+        let key_cipher = Cipher::for_key(&master);
+        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         if pwd_db.get(&rtxn, &key).is_ok() {
             return Err(KyError::Exist);
@@ -52,12 +56,12 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
+        let cipher = Cipher::for_value(&master, &self.key)?;
 
-        let new_pass = Password::generate(&self.pwd_opt).to_string();
+        let password = Password::generate(&self.pwd_opt);
 
-        let encrypted = Details {
-            password: new_pass,
+        let encrypted = Password {
+            password,
             username,
             website,
             expires,
