@@ -1,4 +1,4 @@
-use super::{Decrypted, Encrypted, EntryKey, KyError, KyResult, Password};
+use super::{entity::Master, Decrypted, Encrypted, EntryKey, KyError, KyResult};
 use aes_gcm_siv::{
     aead::{Aead, NewAead},
     Aes256GcmSiv, Key, Nonce,
@@ -21,7 +21,7 @@ impl Cipher {
         Ok(okm)
     }
 
-    pub fn for_key(master: &Password) -> Self {
+    pub fn for_key(master: &Master) -> Self {
         let master_sha = Sha256::digest(master.as_ref().as_bytes());
         let master_key = Key::from_slice(&master_sha);
         let cipher = Aes256GcmSiv::new(master_key);
@@ -33,7 +33,7 @@ impl Cipher {
         Self { cipher, nonce }
     }
 
-    pub fn for_value(master: &Password, key: &EntryKey) -> KyResult<Self> {
+    pub fn for_value(master: &Master, key: &EntryKey) -> KyResult<Self> {
         let master_bytes = master.as_ref().as_bytes();
         let key_bytes = key.as_ref().as_bytes();
 

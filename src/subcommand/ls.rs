@@ -1,7 +1,7 @@
 use crate::{
     check_db,
     cli::Config,
-    lib::{Cipher, Encrypted, KyEnv, KyError, KyResult, KyTable, Password, Prompt, MASTER},
+    lib::{entity::Master, Cipher, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
 use clap::Clap;
 
@@ -16,7 +16,7 @@ impl Command for Ls {
 
         check_db!(db_path);
 
-        let master_pwd = Password::ask_master(&Prompt::theme())?;
+        let master = Master::ask(&Prompt::theme())?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -27,7 +27,7 @@ impl Command for Ls {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master_pwd.verify(hashed.as_ref())? {
+        if !master.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
@@ -39,7 +39,7 @@ impl Command for Ls {
         if keys.is_empty() {
             println!("> No entries found!");
         } else {
-            let key_cipher = Cipher::for_key(&master_pwd);
+            let key_cipher = Cipher::for_key(&master);
 
             for (key, _) in keys {
                 let key = key_cipher.decrypt(&key)?;

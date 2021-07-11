@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 -   Introduce `KyResult<()>`, which is an alias for `Result<(), KyError>` [#15](https://github.com/numToStr/ky/pull/15)
+-   Introduce `Encrypted` and `Decrypted` types [#16](https://github.com/numToStr/ky/pull/16)
 
 ### Changed
 
@@ -25,6 +26,8 @@ ky export
 # Make sure to delete the existing database
 ky import
 ```
+
+-   Internal refactoring [#19](https://github.com/numToStr/ky/pull/19)
 
 ### Fixed
 
