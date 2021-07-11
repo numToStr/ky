@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use clap::Clap;
-use tabled::{table, Alignment, Disable, Full, Indent, Row, Style, Tabled};
+use tabled::{Alignment, Disable, Full, Indent, Modify, Style, Table, Tabled};
 
 #[derive(Tabled)]
 struct Tr(&'static str, String);
@@ -103,13 +103,14 @@ impl Command for Show {
             Tr("Notes", val.notes),
         ];
 
-        let table = table!(
-            &decrypted,
-            Disable::Row(..1),
-            Style::pseudo_clean().header(None),
-            Alignment::left(Full),
-            Indent::new(Row(..), 1, 1, 0, 0)
-        );
+        let table = Table::new(&decrypted)
+            .with(Disable::Row(..1))
+            .with(Style::pseudo_clean().header(None))
+            .with(
+                Modify::new(Full)
+                    .with(Alignment::left())
+                    .with(Indent::new(1, 1, 0, 0)),
+            );
 
         // Don't println! because last line of table already contains a line feed
         print!("{}", table);
