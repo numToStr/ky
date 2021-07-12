@@ -1,9 +1,6 @@
 use super::{Encrypted, KyError, KyResult, MASTER};
 use heed::{types::Str, Database as Mdbx, Env, EnvOpenOptions, RoTxn, RwTxn};
-use std::{
-    fmt::{self, Display, Formatter},
-    path::Path,
-};
+use std::path::Path;
 
 /// Just a check to ensure that the database exist before connecting
 #[macro_export]
@@ -25,11 +22,11 @@ pub enum KyTable {
     Password,
 }
 
-impl Display for KyTable {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl AsRef<str> for KyTable {
+    fn as_ref(&self) -> &str {
         match self {
-            Self::Common => f.write_str("common"),
-            Self::Password => f.write_str("password"),
+            Self::Common => "common",
+            Self::Password => "password",
         }
     }
 }
@@ -43,7 +40,7 @@ impl KyDb {
     /// Returns a new connection to a database from provided env and name
     pub fn new(env: &Env, name: &KyTable) -> KyResult<Self> {
         let db: KyDbType = env
-            .create_database(Some(&name.to_string()))
+            .create_database(Some(name.as_ref()))
             .map_err(|_| KyError::Connection)?;
 
         Ok(Self { db })
