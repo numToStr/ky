@@ -12,7 +12,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.26"
+thiserror = "1.0.29"
 clap = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
 clap_generate = { git = "https://github.com/clap-rs/clap", rev = "24f5cd6" }
 dialoguer = "0.8.0"
