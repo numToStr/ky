@@ -19,7 +19,7 @@ dialoguer = "0.8.0"
 argon2 = "0.2.4"
 rand = { version = "0.8.4", features = ["std"] }
 aes-gcm-siv = "0.10.2"
-sha2 = "0.9.5"
+sha2 = "0.9.8"
 hex = "0.4.3"
 dirs = "3.0.2"
 tabled = "0.2.2"
