@@ -4,12 +4,12 @@ use crate::{
     echo,
     lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
-use clap::Clap;
+use clap::Parser;
 use std::fs::remove_dir_all;
 
 use super::Command;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Nuke {
     /// Delete everything, including default backup (if any)
     #[clap(short, long)]

@@ -8,13 +8,13 @@ use crate::{
         MASTER,
     },
 };
-use clap::Clap;
+use clap::Parser;
 use tabled::{Alignment, Disable, Full, Indent, Modify, Style, Table, Tabled};
 
 #[derive(Tabled)]
 struct Tr(&'static str, String);
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Show {
     /// Entry which need to be shown
     key: EntryKey,

@@ -3,11 +3,11 @@ use crate::{
     cli::Config,
     lib::{entity::Master, Cipher, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
-use clap::Clap;
+use clap::Parser;
 
 use super::Command;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Ls;
 
 impl Command for Ls {

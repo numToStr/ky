@@ -3,13 +3,13 @@ use crate::{
     echo,
     lib::{entity::Master, KyEnv, KyError, KyResult, Prompt, Vault},
 };
-use clap::Clap;
+use clap::Parser;
 
 use std::{fs::remove_dir_all, path::PathBuf};
 
 use super::Command;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Import {
     /// Path to the exported file
     #[clap(short, long)]

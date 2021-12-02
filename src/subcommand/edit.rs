@@ -9,10 +9,10 @@ use crate::{
         PREFIX,
     },
 };
-use clap::Clap;
+use clap::Parser;
 use dialoguer::console::style;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Edit {
     /// Entry which needs to be edited
     key: EntryKey,

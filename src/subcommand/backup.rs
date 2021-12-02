@@ -5,11 +5,11 @@ use crate::{
     echo,
     lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, Vault, MASTER},
 };
-use clap::Clap;
+use clap::Parser;
 use dialoguer::console::style;
 use std::path::PathBuf;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Backup {
     /// Path to the backup file
     #[clap(short, long)]

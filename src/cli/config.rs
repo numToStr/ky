@@ -1,11 +1,11 @@
-use clap::{crate_name, Clap};
+use clap::{crate_name, Parser};
 use dirs::home_dir;
 use std::{
     fs::create_dir_all,
     path::{Path, PathBuf},
 };
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Config {
     /// Path to the vault directory
     #[clap(long, value_name = "path", env = "KY_VAULT_DIR")]
@@ -67,7 +67,7 @@ impl Config {
 }
 
 /// Options for the auto generated password
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct PasswordParams {
     /// Length of the generated password
     #[clap(short, long, default_value = "20")]

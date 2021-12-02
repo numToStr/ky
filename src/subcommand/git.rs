@@ -6,9 +6,8 @@ use crate::{
     cli::Config,
     lib::{Git, KyError, KyResult, Prompt},
 };
-use clap::Clap;
+use clap::{Parser, Subcommand};
 
-#[macro_use]
 macro_rules! check_git_details {
     ($repo: expr, $branch: expr) => {{
         match ($repo, $branch) {
@@ -19,8 +18,24 @@ macro_rules! check_git_details {
     }};
 }
 
-#[derive(Debug, Clap)]
-pub enum GitCmd {
+#[derive(Debug, Parser)]
+pub struct GitCmd {
+    #[clap(subcommand)]
+    cmd: GitSubcmd,
+}
+
+impl Command for GitCmd {
+    fn exec(&self, config: Config) -> KyResult<()> {
+        match &self.cmd {
+            GitSubcmd::Init(c) => c.exec(config),
+            GitSubcmd::Backup(c) => c.exec(config),
+            GitSubcmd::Restore(c) => c.exec(config),
+        }
+    }
+}
+
+#[derive(Debug, Subcommand)]
+pub enum GitSubcmd {
     /// Initialize a git repo in the vault directory
     Init(GitInit),
 
@@ -33,17 +48,7 @@ pub enum GitCmd {
     Restore(GitRestore),
 }
 
-impl Command for GitCmd {
-    fn exec(&self, config: Config) -> KyResult<()> {
-        match self {
-            Self::Init(c) => c.exec(config),
-            Self::Backup(c) => c.exec(config),
-            Self::Restore(c) => c.exec(config),
-        }
-    }
-}
-
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct GitInit {
     /// Push after initialization
     #[clap(short, long)]
@@ -72,7 +77,7 @@ impl Command for GitInit {
     }
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct GitBackup {
     /// Force push
     #[clap(short, long)]
@@ -107,7 +112,7 @@ impl Command for GitBackup {
     }
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct GitRestore {
     /// Ignore already initialized vault, if any
     #[clap(short = 'I', long)]

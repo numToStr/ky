@@ -3,9 +3,9 @@ use crate::{
     lib::{entity::Password, KyResult, Qr},
     subcommand::Command,
 };
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Generate {
     #[clap(flatten)]
     pwd_opt: PasswordParams,

@@ -2,7 +2,7 @@ mod cli;
 mod lib;
 mod subcommand;
 
-use clap::Clap;
+use clap::Parser;
 use cli::Cli;
 use dialoguer::console::style;
 

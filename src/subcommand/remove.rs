@@ -8,10 +8,10 @@ use crate::{
         Prompt, MASTER,
     },
 };
-use clap::Clap;
+use clap::Parser;
 use dialoguer::console::style;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Remove {
     /// Entry which needs to be deleted
     key: EntryKey,
