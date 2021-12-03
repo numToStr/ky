@@ -79,7 +79,7 @@ impl Command for Show {
         };
 
         if let (true, Some(p)) = (self.qr_code, &password) {
-            let code = Qr::new(&p.as_ref())?.render();
+            let code = Qr::new(p.as_ref())?.render();
             eprint!("{}", code);
         }
 

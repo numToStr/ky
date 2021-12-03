@@ -31,7 +31,7 @@ impl Command for Completions {
             Shell::Fish => {
                 generate(Fish, &mut app, name, &mut fd);
             }
-            Shell::PowerShell => {
+            Shell::Pwsh => {
                 generate(PowerShell, &mut app, name, &mut fd);
             }
             Shell::Elvish => {

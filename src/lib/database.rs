@@ -58,7 +58,7 @@ impl KyDb {
 
     /// Retrieve a key-val pair from the databse
     pub fn get(&self, rtxn: &RoTxn, key: &Encrypted) -> KyResult<Encrypted> {
-        let bytes = self.db.get(&rtxn, key.as_ref()).map_err(|_| KyError::Get)?;
+        let bytes = self.db.get(rtxn, key.as_ref()).map_err(|_| KyError::Get)?;
 
         match bytes {
             Some(x) => Ok(Encrypted::from(x)),

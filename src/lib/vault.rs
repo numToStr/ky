@@ -103,12 +103,12 @@ impl<'a> Vault<'a> {
 
         common_db.set(&mut wtxn, &Encrypted::from(MASTER), &hashed)?;
 
-        let key_cipher = Cipher::for_key(&master);
+        let key_cipher = Cipher::for_key(master);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::for_value(&master, &k.title)?;
+            let cipher = Cipher::for_value(master, &k.title)?;
 
             let val = Password {
                 username: k.username,

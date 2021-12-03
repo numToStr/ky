@@ -13,7 +13,7 @@ pub enum Shell {
 
     /// Windows PowerShell
     #[clap(name = "pwsh")]
-    PowerShell,
+    Pwsh,
 
     /// Z SHell (zsh)
     Zsh,

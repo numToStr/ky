@@ -136,7 +136,7 @@ impl Command for GitRestore {
             remove_dir_all(&db_path)?;
         }
 
-        Git::new(&repo, &branch, &db_path).clone()?;
+        Git::new(repo, branch, &db_path).clone()?;
 
         Ok(())
     }

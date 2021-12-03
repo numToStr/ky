@@ -13,8 +13,8 @@ readme = "README.md"
 
 [dependencies]
 thiserror = "1.0.26"
-clap_generate = "3.0.0-beta.5"
-clap = "3.0.0-beta.5"
+clap_generate = "3.0.0-rc.4"
+clap = { version = "3.0.0-rc.4", features = ["derive", "env", "cargo"] }
 dialoguer = "0.8.0"
 argon2 = "0.2.4"
 rand = { version = "0.8.4", features = ["std"] }

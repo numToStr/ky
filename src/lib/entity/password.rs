@@ -94,7 +94,7 @@ impl Password {
     }
 
     pub fn decrypt(cipher: &Cipher, encrypted: &Encrypted) -> KyResult<Self> {
-        let decrypted: String = cipher.decrypt(&encrypted)?.into();
+        let decrypted: String = cipher.decrypt(encrypted)?.into();
 
         let mut keys = decrypted.splitn(5, DELIM);
 
