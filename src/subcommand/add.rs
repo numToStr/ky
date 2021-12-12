@@ -82,7 +82,6 @@ impl Command for Add {
         env.close();
 
         echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
-
         if self.print {
             println!("> Password: {}", password);
         }

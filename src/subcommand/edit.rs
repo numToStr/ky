@@ -32,7 +32,7 @@ impl Command for Edit {
         check_db!(db_path);
 
         let theme = Prompt::theme();
-        let master = Master::ask(&theme)?;
+        let master_pwd = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
 
@@ -43,25 +43,25 @@ impl Command for Edit {
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master.verify(hashed.as_ref())? {
+        if !master_pwd.verify(hashed.as_ref())? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_master(&master);
-        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let master_cipher = Cipher::for_master(&master_pwd);
+        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
 
-        let encrypted = pwd_db.get(&rtxn, &key)?;
+        let encrypted = pwd_db.get(&rtxn, &enc_key)?;
 
         rtxn.commit()?;
 
-        echo!(
+        println!(
             "  {}",
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::for_key(&master, &self.key)?;
+        let key_cipher = Cipher::for_key(&master_pwd, &self.key)?;
 
-        let old_val = Password::decrypt(&cipher, &encrypted)?;
+        let old_val = Password::decrypt(&key_cipher, &encrypted)?;
 
         let username = Prompt::username_with_default(&theme, old_val.username)?;
         let website = Prompt::website_with_default(&theme, old_val.website)?;
@@ -73,8 +73,7 @@ impl Command for Edit {
             println!("{} Password regenerated", style(PREFIX).bold());
             p
         } else {
-            let p = cipher.decrypt(&Encrypted::from(old_val.password))?;
-            p.as_ref().to_string()
+            old_val.password
         };
 
         let new_val = Password {
@@ -84,11 +83,11 @@ impl Command for Edit {
             expires,
             notes,
         }
-        .encrypt(&cipher)?;
+        .encrypt(&key_cipher)?;
 
         let mut wtxn = env.write_txn()?;
 
-        pwd_db.set(&mut wtxn, &key, &new_val)?;
+        pwd_db.set(&mut wtxn, &enc_key, &new_val)?;
 
         wtxn.commit()?;
 

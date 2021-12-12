@@ -80,7 +80,7 @@ impl<'a> Vault<'a> {
                 title: key,
                 website: val.website,
                 username: val.username,
-                password: cipher.decrypt(&Encrypted::from(val.password))?.into(),
+                password: val.password,
                 notes: val.notes,
                 expires: val.expires,
             })

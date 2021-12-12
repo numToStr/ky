@@ -52,34 +52,28 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_master(&master_pwd);
-        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let master_cipher = Cipher::for_master(&master_pwd);
+        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         // The crypted data returned from database
         // Will be in this format password:username:website:expires:notes
-        let encrypted = pwd_db.get(&rtxn, &key)?;
+        let encrypted = pwd_db.get(&rtxn, &enc_key)?;
 
         rtxn.commit()?;
 
         env.close();
 
-        let cipher = Cipher::for_key(&master_pwd, &self.key)?;
+        let key_master = Cipher::for_key(&master_pwd, &self.key)?;
 
-        let val = Password::decrypt(&cipher, &encrypted)?;
+        let val = Password::decrypt(&key_master, &encrypted)?;
 
         // We can use threads to decrypt each of them
         // and later use .join() to grab the decrypted value
         // Which will make this decryption way faster
         // I tried and I failed, maybe next time
 
-        let password = if self.clear || self.qr_code {
-            Some(cipher.decrypt(&Encrypted::from(val.password))?)
-        } else {
-            None
-        };
-
-        if let (true, Some(p)) = (self.qr_code, &password) {
-            let code = Qr::new(p.as_ref())?.render();
+        if self.qr_code {
+            let code = Qr::new(&val.password)?.render();
             eprint!("{}", code);
         }
 
@@ -92,8 +86,8 @@ impl Command for Show {
             Tr("Username", val.username),
             Tr(
                 "Password",
-                if let (true, Some(p)) = (self.clear, password) {
-                    p.into()
+                if self.clear {
+                    val.password
                 } else {
                     "*".repeat(15)
                 },
