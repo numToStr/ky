@@ -16,6 +16,10 @@ pub struct Add {
     /// Unique key for the entry
     key: EntryKey,
 
+    /// Print newly created passoword
+    #[clap(short = 'P', long)]
+    print: bool,
+
     #[clap(flatten)]
     pwd_opt: PasswordParams,
 }
@@ -61,7 +65,7 @@ impl Command for Add {
         let password = Password::generate(&self.pwd_opt);
 
         let encrypted = Password {
-            password,
+            password: password.to_string(),
             username,
             website,
             expires,
@@ -78,6 +82,10 @@ impl Command for Add {
         env.close();
 
         echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
+
+        if self.print {
+            println!("> Password: {}", password);
+        }
 
         Ok(())
     }
