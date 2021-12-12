@@ -47,7 +47,7 @@ impl Command for Edit {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master);
+        let key_cipher = Cipher::for_master(&master);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let encrypted = pwd_db.get(&rtxn, &key)?;
@@ -59,7 +59,7 @@ impl Command for Edit {
             style("Type '-' to clear the field or Press ENTER to use the current value").dim()
         );
 
-        let cipher = Cipher::for_value(&master, &self.key)?;
+        let cipher = Cipher::for_key(&master, &self.key)?;
 
         let old_val = Password::decrypt(&cipher, &encrypted)?;
 

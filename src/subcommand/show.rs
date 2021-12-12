@@ -52,7 +52,7 @@ impl Command for Show {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master_pwd);
+        let key_cipher = Cipher::for_master(&master_pwd);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         // The crypted data returned from database
@@ -63,7 +63,7 @@ impl Command for Show {
 
         env.close();
 
-        let cipher = Cipher::for_value(&master_pwd, &self.key)?;
+        let cipher = Cipher::for_key(&master_pwd, &self.key)?;
 
         let val = Password::decrypt(&cipher, &encrypted)?;
 

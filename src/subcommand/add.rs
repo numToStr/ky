@@ -46,10 +46,10 @@ impl Command for Add {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master);
-        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let master_cipher = Cipher::for_master(&master);
+        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
 
-        if pwd_db.get(&rtxn, &key).is_ok() {
+        if pwd_db.get(&rtxn, &enc_key).is_ok() {
             return Err(KyError::Exist);
         }
 
@@ -60,7 +60,7 @@ impl Command for Add {
         let expires = Prompt::expires(&theme)?;
         let notes = Prompt::notes(&theme)?;
 
-        let cipher = Cipher::for_value(&master, &self.key)?;
+        let key_cipher = Cipher::for_key(&master, &self.key)?;
 
         let password = Password::generate(&self.pwd_opt);
 
@@ -71,11 +71,11 @@ impl Command for Add {
             expires,
             notes,
         }
-        .encrypt(&cipher)?;
+        .encrypt(&key_cipher)?;
 
         let mut wtxn = env.write_txn()?;
 
-        pwd_db.set(&mut wtxn, &key, &encrypted)?;
+        pwd_db.set(&mut wtxn, &enc_key, &encrypted)?;
 
         wtxn.commit()?;
 
