@@ -3,13 +3,13 @@ use crate::{
     cli::{Cli, Config},
     lib::{shell::Shell, KyResult},
 };
-use clap::{crate_name, Clap, IntoApp};
+use clap::{crate_name, IntoApp, Parser};
 use clap_generate::{
     generate,
     generators::{Bash, Elvish, Fish, PowerShell, Zsh},
 };
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Completions {
     #[clap(subcommand)]
     shell: Shell,
@@ -23,19 +23,19 @@ impl Command for Completions {
 
         match self.shell {
             Shell::Bash => {
-                generate::<Bash, _>(&mut app, name, &mut fd);
+                generate(Bash, &mut app, name, &mut fd);
             }
             Shell::Zsh => {
-                generate::<Zsh, _>(&mut app, name, &mut fd);
+                generate(Zsh, &mut app, name, &mut fd);
             }
             Shell::Fish => {
-                generate::<Fish, _>(&mut app, name, &mut fd);
+                generate(Fish, &mut app, name, &mut fd);
             }
-            Shell::PowerShell => {
-                generate::<PowerShell, _>(&mut app, name, &mut fd);
+            Shell::Pwsh => {
+                generate(PowerShell, &mut app, name, &mut fd);
             }
             Shell::Elvish => {
-                generate::<Elvish, _>(&mut app, name, &mut fd);
+                generate(Elvish, &mut app, name, &mut fd);
             }
         };
 

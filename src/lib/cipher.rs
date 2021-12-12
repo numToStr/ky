@@ -44,7 +44,7 @@ impl Cipher {
         let master_key = Key::from_slice(&third_pass);
         let cipher = Aes256GcmSiv::new(master_key);
 
-        let nonce_secret = Self::make_key::<12>(&second_pass, &first_pass, &key_bytes)?;
+        let nonce_secret = Self::make_key::<12>(&second_pass, &first_pass, key_bytes)?;
 
         let nonce = Nonce::from_slice(&nonce_secret).to_owned();
 

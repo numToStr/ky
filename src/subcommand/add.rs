@@ -8,10 +8,10 @@ use crate::{
         Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
     },
 };
-use clap::Clap;
+use clap::Parser;
 use dialoguer::console::style;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Add {
     /// Unique key for the entry
     key: EntryKey,

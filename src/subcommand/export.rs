@@ -6,12 +6,12 @@ use crate::{
     echo,
     lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, Vault, MASTER},
 };
-use clap::Clap;
+use clap::Parser;
 use dialoguer::console::style;
 
 use super::Command;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Export {
     /// Path to the export file
     #[clap(short, long)]

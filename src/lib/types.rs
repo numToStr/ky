@@ -2,7 +2,6 @@ use super::KyError;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[macro_use]
 macro_rules! asref_str {
     ($struct: ty) => {
         impl AsRef<str> for $struct {
@@ -13,7 +12,6 @@ macro_rules! asref_str {
     };
 }
 
-#[macro_use]
 macro_rules! from_string {
     ($struct: ty) => {
         impl From<String> for $struct {

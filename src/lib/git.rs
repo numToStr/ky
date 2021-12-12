@@ -82,8 +82,8 @@ impl<'a> Git<'a> {
                 "-C",
                 &self.target,
                 "push",
-                &self.repo,
-                &self.branch,
+                self.repo,
+                self.branch,
                 if force { "--force" } else { "--no-force" },
             ])
             .spawn()?
@@ -99,7 +99,7 @@ impl<'a> Git<'a> {
     pub fn clone(self) -> KyResult<Self> {
         let status = self
             .git()
-            .args(&["clone", &self.repo, &self.target, "--branch", &self.branch])
+            .args(&["clone", self.repo, &self.target, "--branch", self.branch])
             .spawn()?
             .wait()?;
 

@@ -1,6 +1,6 @@
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub enum Shell {
     /// Bourne Again SHell (bash)
     Bash,
@@ -13,7 +13,7 @@ pub enum Shell {
 
     /// Windows PowerShell
     #[clap(name = "pwsh")]
-    PowerShell,
+    Pwsh,
 
     /// Z SHell (zsh)
     Zsh,

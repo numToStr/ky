@@ -1,14 +1,14 @@
 use super::Config;
 use crate::subcommand::SubCommand;
-use clap::{crate_authors, crate_description, crate_name, crate_version, AppSettings, Clap};
+use clap::{crate_authors, crate_description, crate_name, crate_version, AppSettings, Parser};
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(
     name = crate_name!(),
     version = crate_version!(),
     author = crate_authors!(),
     about = crate_description!(),
-    setting = AppSettings::DisableVersionForSubcommands
+    global_setting = AppSettings::DisableColoredHelp
 )]
 pub struct Cli {
     #[clap(flatten)]

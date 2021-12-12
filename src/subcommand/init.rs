@@ -4,9 +4,9 @@ use crate::{
     echo,
     lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
 };
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Init;
 
 impl Command for Init {

@@ -6,9 +6,9 @@ use crate::{
     echo,
     lib::{KyError, KyResult, Prompt, Vault},
 };
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Restore {
     /// Path to the vault backup
     #[clap(short, long)]
