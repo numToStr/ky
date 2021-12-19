@@ -39,7 +39,7 @@ impl Command for Ls {
         if keys.is_empty() {
             println!("> No entries found!");
         } else {
-            let key_cipher = Cipher::for_key(&master);
+            let key_cipher = Cipher::for_master(&master);
 
             for (key, _) in keys {
                 let key = key_cipher.decrypt(&key)?;

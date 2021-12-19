@@ -38,7 +38,7 @@ impl Command for Remove {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master);
+        let key_cipher = Cipher::for_master(&master);
         let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
 
         let _ = pwd_db.get(&rtxn, &key)?;

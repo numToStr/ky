@@ -68,19 +68,19 @@ impl<'a> Vault<'a> {
         entries: Vec<(Encrypted, Encrypted)>,
     ) -> KyResult<()> {
         let mut wtr = Writer::from_path(dest).map_err(|_| KyError::ExportCreate)?;
-        let key_cipher = Cipher::for_key(master);
+        let master_cipher = Cipher::for_master(master);
 
         for (k, v) in entries.into_iter() {
-            let key = key_cipher.decrypt(&k)?.into();
-            let cipher = Cipher::for_value(master, &key)?;
-            let val = Password::decrypt(&cipher, &v)?;
+            let key = master_cipher.decrypt(&k)?.into();
+            let key_cipher = Cipher::for_key(master, &key)?;
+            let val = Password::decrypt(&key_cipher, &v)?;
             let key_ref = key.as_ref().to_string();
 
             wtr.serialize(Row {
                 title: key,
                 website: val.website,
                 username: val.username,
-                password: cipher.decrypt(&Encrypted::from(val.password))?.into(),
+                password: val.password,
                 notes: val.notes,
                 expires: val.expires,
             })
@@ -103,12 +103,12 @@ impl<'a> Vault<'a> {
 
         common_db.set(&mut wtxn, &Encrypted::from(MASTER), &hashed)?;
 
-        let key_cipher = Cipher::for_key(master);
+        let master_cipher = Cipher::for_master(master);
 
         for (i, entry) in iter.enumerate() {
             let k: Row = entry.map_err(|_| KyError::Import(i))?;
 
-            let cipher = Cipher::for_value(master, &k.title)?;
+            let key_cipher = Cipher::for_key(master, &k.title)?;
 
             let val = Password {
                 username: k.username,
@@ -117,9 +117,9 @@ impl<'a> Vault<'a> {
                 expires: k.expires,
                 notes: k.notes,
             }
-            .encrypt(&cipher)?;
+            .encrypt(&key_cipher)?;
 
-            let key = key_cipher.encrypt(&Decrypted::from(&k.title))?;
+            let key = master_cipher.encrypt(&Decrypted::from(&k.title))?;
 
             pwd_db.set(&mut wtxn, &key, &val)?;
         }

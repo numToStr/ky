@@ -41,7 +41,7 @@ impl Command for Move {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_key(&master);
+        let key_cipher = Cipher::for_master(&master);
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
@@ -57,12 +57,12 @@ impl Command for Move {
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_cipher = Cipher::for_value(&master, &self.old_key)?;
+        let old_cipher = Cipher::for_key(&master, &self.old_key)?;
 
         let old_val = Password::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::for_value(&master, &self.new_key)?;
+        let new_cipher = Cipher::for_key(&master, &self.new_key)?;
         let new_val = Password {
             password: old_cipher
                 .decrypt(&Encrypted::from(old_val.password))?
