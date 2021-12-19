@@ -15,7 +15,7 @@ readme = "README.md"
 thiserror = "1.0.30"
 clap_generate = "3.0.0-rc.4"
 clap = { version = "3.0.0-rc.4", features = ["derive", "env", "cargo"] }
-dialoguer = "0.8.0"
+dialoguer = "0.9.0"
 argon2 = "0.3.2"
 rand = { version = "0.8.4", features = ["std"] }
 aes-gcm-siv = "0.10.2"
