@@ -18,18 +18,18 @@ clap = { version = "3.0.0-rc.4", features = ["derive", "env", "cargo"] }
 dialoguer = "0.9.0"
 argon2 = "0.3.2"
 rand = { version = "0.8.4", features = ["std"] }
-aes-gcm-siv = "0.10.2"
+aes-gcm-siv = "0.10.3"
 sha2 = "0.10.0"
 hex = "0.4.3"
 dirs = "4.0.0"
 tabled = "0.3.0"
-tar = "0.4.37"
+tar = "0.4.38"
 zstd = "0.9.0"
 qrcodegen = "1.7.0"
 # heed = { version = "0.11.0", default-features = false, features = ["mdbx"] }
 heed = { version = "0.11.0", default-features = false, features = ["lmdb"] }
 csv = "1.1.6"
-serde = { version = "1.0.131", features = ["derive"] }
+serde = { version = "1.0.132", features = ["derive"] }
 hkdf = "0.12.0"
 num_cpus = "1.13.0"
 
