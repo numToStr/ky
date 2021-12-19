@@ -1,10 +1,10 @@
+use crate::lib::{Encrypted, KyError, KyResult};
 use argon2::{
-    password_hash::SaltString, Argon2, PasswordHash, PasswordHasher, PasswordVerifier, Version,
+    password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher,
+    PasswordVerifier, Version,
 };
 use dialoguer::theme::Theme;
 use rand::rngs::OsRng;
-
-use crate::lib::{Encrypted, KyError, KyResult};
 
 const ITR: u32 = 3;
 const MEM: u32 = 1024 * 128; // 128MB
@@ -33,12 +33,9 @@ impl Master {
 
     #[inline]
     fn argon() -> KyResult<Argon2<'static>> {
-        let pll = num_cpus::get() as u32;
-
-        // TODO: first arg can be replace by a key file
-        let argon = Argon2::new(None, ITR, MEM, pll, Version::default())
-            .map_err(|e| KyError::Any(e.to_string()))?;
-
+        let p_cost = num_cpus::get() as u32;
+        let param = Params::new(MEM, ITR, p_cost, None).map_err(|e| KyError::Any(e.to_string()))?;
+        let argon = Argon2::new(Algorithm::default(), Version::default(), param);
         Ok(argon)
     }
 
@@ -48,7 +45,7 @@ impl Master {
         let argon = Self::argon()?;
 
         let hash = argon
-            .hash_password_simple(self.raw.as_bytes(), salt.as_ref())
+            .hash_password(self.raw.as_bytes(), salt.as_ref())
             .map_err(|_| KyError::PwdHash)?
             .to_string();
 
