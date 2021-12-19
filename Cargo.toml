@@ -12,7 +12,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.26"
+thiserror = "1.0.30"
 clap_generate = "3.0.0-rc.4"
 clap = { version = "3.0.0-rc.4", features = ["derive", "env", "cargo"] }
 dialoguer = "0.8.0"
