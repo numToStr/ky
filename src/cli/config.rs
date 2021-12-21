@@ -74,6 +74,10 @@ pub struct PasswordParams {
     pub length: u64,
 
     /// Characters to exclude from the password
-    #[clap(short, long, name = "chars")]
+    #[clap(short, long)]
     pub exclude: Option<String>,
+
+    /// Characters set for the password
+    #[clap(short, long)]
+    pub charset: Option<String>,
 }

@@ -21,31 +21,35 @@ pub struct Password {
 
 impl Password {
     pub fn generate(opts: &PasswordParams) -> String {
-        let charset: Vec<u8> = match &opts.exclude {
-            Some(x) => {
-                let exclude_bytes = x.as_bytes();
+        let chars: Vec<u8> = {
+            let charset = match &opts.charset {
+                Some(x) => x.as_bytes(),
+                None => CHARSET,
+            };
 
-                CHARSET
-                    .to_vec()
-                    .into_iter()
-                    .filter(|c| !exclude_bytes.contains(c))
-                    .collect()
+            match &opts.exclude {
+                Some(x) => {
+                    let excluded = x.as_bytes();
+
+                    charset
+                        .to_vec()
+                        .into_iter()
+                        .filter(|c| !excluded.contains(c))
+                        .collect()
+                }
+                _ => charset.to_vec(),
             }
-            _ => CHARSET.to_vec(),
         };
 
+        let len = chars.len();
         let mut rng = thread_rng();
 
-        let len = charset.len();
-
-        let pwd: String = (0..opts.length)
+        (0..opts.length)
             .map(|_| {
                 let idx = rng.gen_range(0..len);
-                charset[idx] as char
+                chars[idx] as char
             })
-            .collect();
-
-        pwd
+            .collect()
     }
 
     #[inline]
