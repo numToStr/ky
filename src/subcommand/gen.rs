@@ -14,7 +14,7 @@ pub struct Generate {
     #[clap(short, long)]
     qr_code: bool,
 
-    /// Don't print the details, can be used with qr code
+    /// Don't print the password, can be used with qr code
     #[clap(short, long)]
     mute: bool,
 }
@@ -29,8 +29,6 @@ impl Command for Generate {
         }
 
         if !self.mute {
-            // Printing first part to stderr so that password can be easily read from stdout
-            eprint!("Password: ");
             println!("{}", password);
         }
 
