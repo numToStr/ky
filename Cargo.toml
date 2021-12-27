@@ -31,7 +31,7 @@ heed = { version = "0.11.0", default-features = false, features = ["lmdb"] }
 csv = "1.1.6"
 serde = { version = "1.0.132", features = ["derive"] }
 hkdf = "0.12.0"
-num_cpus = "1.13.0"
+num_cpus = "1.13.1"
 
 [profile.dev]
 debug = 0
