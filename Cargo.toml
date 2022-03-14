@@ -24,7 +24,7 @@ hex = "0.4.3"
 dirs = "4.0.0"
 tabled = "0.3.0"
 tar = "0.4.38"
-zstd = "0.9.1"
+zstd = "0.11.0"
 qrcodegen = "1.7.0"
 # heed = { version = "0.11.0", default-features = false, features = ["mdbx"] }
 heed = { version = "0.11.0", default-features = false, features = ["lmdb"] }
