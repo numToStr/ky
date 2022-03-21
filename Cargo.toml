@@ -16,7 +16,7 @@ thiserror = "1.0.30"
 clap_generate = "3.0.0-rc.7"
 clap = { version = "3.0.0-rc.7", features = ["derive", "env", "cargo"] }
 dialoguer = "0.9.0"
-argon2 = "0.3.2"
+argon2 = "0.4.0"
 rand = { version = "0.8.4", features = ["std"] }
 aes-gcm-siv = "0.10.3"
 sha2 = "0.10.0"
