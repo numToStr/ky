@@ -18,7 +18,7 @@ use crate::{cli::Config, lib::KyResult};
 use clap::Subcommand;
 
 use self::{
-    add::Add, backup::Backup, completions::Completions, edit::Edit, export::Export, gen::Generate,
+    add::Add, backup::Backup, completions::Completion, edit::Edit, export::Export, gen::Generate,
     git::GitCmd, import::Import, init::Init, ls::Ls, nuke::Nuke, r#move::Move, remove::Remove,
     restore::Restore, show::Show,
 };
@@ -30,7 +30,7 @@ pub(self) trait Command {
 #[derive(Debug, Subcommand)]
 pub enum SubCommand {
     /// Generate completions for different shells
-    Completions(Completions),
+    Completion(Completion),
 
     /// Initialize the vault with a master password
     #[clap(visible_alias = "i")]
@@ -95,7 +95,7 @@ pub enum SubCommand {
 impl SubCommand {
     pub fn exec(&self, config: Config) -> KyResult<()> {
         match self {
-            Self::Completions(c) => c.exec(config),
+            Self::Completion(c) => c.exec(config),
             Self::Init(c) => c.exec(config),
             Self::Add(c) => c.exec(config),
             Self::Remove(c) => c.exec(config),

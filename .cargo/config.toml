@@ -1,9 +1,6 @@
 [alias]
-b = "build --release"
+bb = "build --release --offline"
 ii = "install --path . --offline"
-
-[target.'cfg(unix)']
-rustflags = ["-C", "link-arg=-s"]
 
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]

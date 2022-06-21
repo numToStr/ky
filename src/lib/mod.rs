@@ -5,7 +5,6 @@ mod error;
 mod git;
 mod prompt;
 mod qrcode;
-pub mod shell;
 mod tree;
 mod types;
 mod vault;

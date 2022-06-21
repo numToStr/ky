@@ -9,7 +9,7 @@ use crate::{
     },
 };
 use clap::Parser;
-use tabled::{Alignment, Disable, Full, Indent, Modify, Style, Table, Tabled};
+use tabled::{object::Segment, Alignment, Disable, Modify, Style, Table, Tabled};
 
 #[derive(Tabled)]
 struct Tr(&'static str, String);
@@ -99,12 +99,8 @@ impl Command for Show {
 
         let table = Table::new(&decrypted)
             .with(Disable::Row(..1))
-            .with(Style::pseudo_clean().header(None))
-            .with(
-                Modify::new(Full)
-                    .with(Alignment::left())
-                    .with(Indent::new(1, 1, 0, 0)),
-            );
+            .with(Style::modern().header_off().horizontal_off())
+            .with(Modify::new(Segment::all()).with(Alignment::left()));
 
         // Don't println! because last line of table already contains a line feed
         print!("{}", table);

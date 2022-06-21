@@ -1,43 +1,26 @@
 use super::Command;
 use crate::{
     cli::{Cli, Config},
-    lib::{shell::Shell, KyResult},
+    lib::KyResult,
 };
 use clap::{crate_name, IntoApp, Parser};
-use clap_generate::{
-    generate,
-    generators::{Bash, Elvish, Fish, PowerShell, Zsh},
-};
+use clap_complete::{generate, Shell};
 
 #[derive(Debug, Parser)]
-pub struct Completions {
-    #[clap(subcommand)]
+pub struct Completion {
+    /// Name of the shell
+    #[clap(arg_enum)]
     shell: Shell,
 }
 
-impl Command for Completions {
+impl Command for Completion {
     fn exec(&self, _: Config) -> KyResult<()> {
-        let name = crate_name!();
-        let mut app = Cli::into_app();
-        let mut fd = std::io::stdout();
-
-        match self.shell {
-            Shell::Bash => {
-                generate(Bash, &mut app, name, &mut fd);
-            }
-            Shell::Zsh => {
-                generate(Zsh, &mut app, name, &mut fd);
-            }
-            Shell::Fish => {
-                generate(Fish, &mut app, name, &mut fd);
-            }
-            Shell::Pwsh => {
-                generate(PowerShell, &mut app, name, &mut fd);
-            }
-            Shell::Elvish => {
-                generate(Elvish, &mut app, name, &mut fd);
-            }
-        };
+        generate(
+            self.shell,
+            &mut Cli::into_app(),
+            crate_name!(),
+            &mut std::io::stdout(),
+        );
 
         Ok(())
     }

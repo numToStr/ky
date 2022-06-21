@@ -1,3 +1,5 @@
+use std::thread::available_parallelism;
+
 use crate::lib::{Encrypted, KyError, KyResult};
 use argon2::{
     password_hash::SaltString, Algorithm, Argon2, Params, PasswordHash, PasswordHasher,
@@ -33,7 +35,7 @@ impl Master {
 
     #[inline]
     fn argon() -> KyResult<Argon2<'static>> {
-        let p_cost = num_cpus::get() as u32;
+        let p_cost = available_parallelism()?.get() as u32;
         let param = Params::new(MEM, ITR, p_cost, None).map_err(|e| KyError::Any(e.to_string()))?;
         let argon = Argon2::new(Algorithm::default(), Version::default(), param);
         Ok(argon)
