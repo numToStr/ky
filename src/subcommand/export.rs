@@ -23,7 +23,7 @@ pub struct Export {
 }
 
 impl Command for Export {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -33,14 +33,14 @@ impl Command for Export {
         let master = Master::ask(&theme)?;
 
         let env = KyEnv::connect(&db_path)?;
-        let common_db = env.get_table(KyTable::Common)?;
+        let common_db = env.get_table(KyTable::Master)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master.verify(hashed.as_ref())? {
+        if !master.verify(hashed)? {
             return Err(KyError::MisMatch);
         }
 

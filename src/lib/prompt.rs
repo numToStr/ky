@@ -106,8 +106,8 @@ impl Prompt {
     }
 
     #[inline]
-    pub fn notes(theme: &impl Theme) -> PromptReturn {
-        Self::prompt("Notes", theme)
+    pub fn note(theme: &impl Theme) -> PromptReturn {
+        Self::prompt("Note", theme)
     }
 
     #[inline]

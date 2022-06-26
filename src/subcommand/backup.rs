@@ -1,9 +1,8 @@
 use super::Command;
 use crate::{
-    check_db,
     cli::Config,
     echo,
-    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, Vault, MASTER},
+    lib::{entity::Master, KyDb2, KyError, KyResult, KyTable, Prompt, Vault},
 };
 use clap::Parser;
 use dialoguer::console::style;
@@ -16,36 +15,30 @@ pub struct Backup {
     path: Option<PathBuf>,
 
     /// Ignore and delete existing backup file
-    #[clap(short = 'I', long)]
+    #[clap(short, long)]
     ignore: bool,
 }
 
 impl Command for Backup {
-    fn exec(&self, config: Config) -> KyResult<()> {
-        let db_path = config.db_path();
-
-        check_db!(db_path);
-
+    fn exec(self, config: Config) -> KyResult<()> {
         let theme = Prompt::theme();
         let master = Master::ask(&theme)?;
 
-        let env = KyEnv::connect(&db_path)?;
-        let common_db = env.get_table(KyTable::Common)?;
+        let db_path = config.db_path();
+        let db = KyDb2::connect(&db_path)?;
 
-        let rtxn = env.read_txn()?;
+        {
+            let rtxn = db.rtxn()?;
+            let master_tbl = db.open_read(&rtxn, KyTable::Master)?;
+            let hashed = master_tbl.get(&Master::KEY.into())?;
 
-        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
-
-        rtxn.commit()?;
-
-        env.close();
-
-        if !master.verify(hashed.as_ref())? {
-            return Err(KyError::MisMatch);
+            if !master.verify(hashed)? {
+                return Err(KyError::MisMatch);
+            }
         }
 
-        let backup_path = match &self.path {
-            Some(p) => p.to_path_buf(),
+        let backup_path = match self.path {
+            Some(p) => p,
             _ => config.backup_path(),
         };
 
@@ -56,7 +49,7 @@ impl Command for Backup {
             return Ok(());
         }
 
-        Vault::new(&db_path).backup(&backup_path)?;
+        Vault::backup(&config.vault_path(), &backup_path)?;
 
         echo!("> Vault backed-up: {}", style(backup_path.display()).bold());
 

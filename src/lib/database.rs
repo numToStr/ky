@@ -1,4 +1,4 @@
-use super::{Encrypted, KyError, KyResult, MASTER};
+use super::{entity::Master, Encrypted, KyError, KyResult};
 use heed::{types::Str, Database as Mdbx, Env, EnvOpenOptions, RoTxn, RwTxn};
 use std::path::Path;
 
@@ -17,7 +17,7 @@ type KyDbType = Mdbx<Str, Str>;
 /// KyTable is a collection of all the table names
 pub enum KyTable {
     /// Common table to store common data across multiple tables ie. master password
-    Common,
+    Master,
     /// Password table where all the passwords are stored
     Password,
 }
@@ -25,7 +25,7 @@ pub enum KyTable {
 impl AsRef<str> for KyTable {
     fn as_ref(&self) -> &str {
         match self {
-            Self::Common => "common",
+            Self::Master => "master",
             Self::Password => "password",
         }
     }
@@ -83,7 +83,7 @@ impl KyDb {
         for kv in self.db.iter(rtxn)? {
             let (k, v) = kv?;
 
-            if k != MASTER {
+            if k != Master::KEY {
                 keys.push((Encrypted::from(k), Encrypted::from(v)));
             }
         }

@@ -20,7 +20,7 @@ pub struct Generate {
 }
 
 impl Command for Generate {
-    fn exec(&self, _: Config) -> KyResult<()> {
+    fn exec(self, _: Config) -> KyResult<()> {
         let password = Password::generate(&self.pwd_opt);
 
         if self.qr_code {

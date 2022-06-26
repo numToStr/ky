@@ -1,11 +1,12 @@
+use std::convert::TryFrom;
+
 use super::Command;
 use crate::{
-    check_db,
     cli::{Config, PasswordParams},
     echo,
     lib::{
         entity::{Master, Password},
-        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+        Cipher, EntryKey, KyDb2, KyError, KyResult, KyTable, Prompt,
     },
 };
 use clap::Parser;
@@ -17,7 +18,7 @@ pub struct Add {
     key: EntryKey,
 
     /// Print newly created passoword
-    #[clap(short = 'P', long)]
+    #[clap(short, long)]
     print: bool,
 
     #[clap(flatten)]
@@ -25,66 +26,62 @@ pub struct Add {
 }
 
 impl Command for Add {
-    fn exec(&self, config: Config) -> KyResult<()> {
-        let db_path = config.db_path();
-
-        check_db!(db_path);
-
+    fn exec(self, config: Config) -> KyResult<()> {
         let theme = Prompt::theme();
         let master = Master::ask(&theme)?;
 
-        let env = KyEnv::connect(&db_path)?;
+        let db = KyDb2::connect(&config.db_path())?;
 
-        let common_db = env.get_table(KyTable::Common)?;
-        let pwd_db = env.get_table(KyTable::Password)?;
+        {
+            let rtxn = db.rtxn()?;
+            let master_tbl = db.open_read(&rtxn, KyTable::Master)?;
+            let hashed = master_tbl.get(&Master::KEY.into())?;
 
-        let rtxn = env.read_txn()?;
-
-        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
-
-        if !master.verify(hashed.as_ref())? {
-            return Err(KyError::MisMatch);
+            if !master.verify(hashed)? {
+                return Err(KyError::MisMatch);
+            }
         }
 
-        let master_cipher = Cipher::for_master(&master);
-        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let wtxn = db.wtxn()?;
 
-        if pwd_db.get(&rtxn, &enc_key).is_ok() {
-            return Err(KyError::Exist);
+        {
+            let mut pwd_tbl = db.open_write(&wtxn, KyTable::Password)?;
+            let key = Cipher::from(&master).encrypt(&self.key.clone().into())?;
+
+            if pwd_tbl.get(&key).is_ok() {
+                return Err(KyError::Exist);
+            }
+
+            let username = Prompt::username(&theme)?;
+            let website = Prompt::website(&theme)?;
+            let expires = Prompt::expires(&theme)?;
+            let notes = Prompt::note(&theme)?;
+
+            let data_cipher = Cipher::try_from((&master, &self.key))?;
+
+            let pwd = Password::generate(&self.pwd_opt);
+
+            let encrypted = {
+                let data = Password {
+                    password: pwd.to_owned(),
+                    username,
+                    website,
+                    expires,
+                    note: notes,
+                };
+                data_cipher.encrypt(&data.into())?
+            };
+
+            pwd_tbl.set(key, encrypted)?;
+
+            echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
+
+            if self.print {
+                println!("> Password: {pwd}");
+            }
         }
-
-        rtxn.commit()?;
-
-        let username = Prompt::username(&theme)?;
-        let website = Prompt::website(&theme)?;
-        let expires = Prompt::expires(&theme)?;
-        let notes = Prompt::notes(&theme)?;
-
-        let key_cipher = Cipher::for_key(&master, &self.key)?;
-
-        let password = Password::generate(&self.pwd_opt);
-
-        let encrypted = Password {
-            password: password.to_string(),
-            username,
-            website,
-            expires,
-            notes,
-        }
-        .encrypt(&key_cipher)?;
-
-        let mut wtxn = env.write_txn()?;
-
-        pwd_db.set(&mut wtxn, &enc_key, &encrypted)?;
 
         wtxn.commit()?;
-
-        env.close();
-
-        echo!("> Entry added: {}", style(&self.key.as_ref()).bold());
-        if self.print {
-            println!("> Password: {}", password);
-        }
 
         Ok(())
     }

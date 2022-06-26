@@ -14,7 +14,7 @@ pub struct Completion {
 }
 
 impl Command for Completion {
-    fn exec(&self, _: Config) -> KyResult<()> {
+    fn exec(self, _: Config) -> KyResult<()> {
         generate(
             self.shell,
             &mut Cli::into_app(),

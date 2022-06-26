@@ -28,6 +28,10 @@ pub struct Config {
     pub git_branch: Option<String>,
 }
 
+const DB_NAME: &str = concat!(crate_name!(), ".db");
+const BACKUP_NAME: &str = concat!(crate_name!(), ".backup");
+const EXPORT_NAME: &str = concat!(crate_name!(), ".csv");
+
 impl Config {
     pub fn ensure_create<P: AsRef<Path>>(&self, path: P) -> P {
         create_dir_all(&path).ok();
@@ -47,22 +51,21 @@ impl Config {
     }
 
     pub fn backup_path(&self) -> PathBuf {
-        self.ensure_create(self.backup_dir())
-            .join(concat!(crate_name!(), ".backup"))
+        self.ensure_create(self.backup_dir()).join(BACKUP_NAME)
     }
 
     pub fn export_path(&self) -> PathBuf {
-        self.ensure_create(self.backup_dir())
-            .join(concat!(crate_name!(), ".csv"))
+        self.ensure_create(self.backup_dir()).join(EXPORT_NAME)
+    }
+
+    pub fn vault_path(&self) -> PathBuf {
+        self.vault_path
+            .clone()
+            .unwrap_or_else(|| self.ky_home().join("vault"))
     }
 
     pub fn db_path(&self) -> PathBuf {
-        self.ensure_create(
-            self.vault_path
-                .clone()
-                .unwrap_or_else(|| self.ky_home().join("vault")),
-        )
-        .join(concat!(crate_name!(), ".db"))
+        self.ensure_create(self.vault_path()).join(DB_NAME)
     }
 }
 

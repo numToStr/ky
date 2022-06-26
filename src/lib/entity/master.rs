@@ -1,3 +1,4 @@
+use derive_more::{AsRef, From};
 use std::thread::available_parallelism;
 
 use crate::lib::{Encrypted, KyError, KyResult};
@@ -11,12 +12,15 @@ use rand::rngs::OsRng;
 const ITR: u32 = 3;
 const MEM: u32 = 1024 * 128; // 128MB
 
+#[derive(Debug, AsRef, From)]
 pub struct Master {
     raw: String,
 }
 
 impl Master {
-    pub fn new(theme: &impl Theme) -> KyResult<Self> {
+    pub const KEY: &'static str = "master";
+
+    pub fn confirm(theme: &impl Theme) -> KyResult<Self> {
         let raw = dialoguer::Password::with_theme(theme)
             .with_prompt("New master password")
             .with_confirmation("Retype to verify", "Passwords didn't match")
@@ -54,8 +58,8 @@ impl Master {
         Ok(Encrypted::from(hash))
     }
 
-    pub fn verify(&self, hash: &str) -> KyResult<bool> {
-        let parsed_hash = PasswordHash::new(hash).map_err(|_| KyError::PwdVerify)?;
+    pub fn verify(&self, hash: Encrypted) -> KyResult<bool> {
+        let parsed_hash = PasswordHash::new(hash.as_ref()).map_err(|_| KyError::PwdVerify)?;
 
         let argon = Self::argon()?;
 
@@ -64,11 +68,5 @@ impl Master {
             .is_ok();
 
         Ok(is_verified)
-    }
-}
-
-impl AsRef<str> for Master {
-    fn as_ref(&self) -> &str {
-        &self.raw
     }
 }

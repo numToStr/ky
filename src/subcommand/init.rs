@@ -2,7 +2,7 @@ use super::Command;
 use crate::{
     cli::Config,
     echo,
-    lib::{entity::Master, Encrypted, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER},
+    lib::{entity::Master, KyDb2, KyError, KyResult, KyTable, Prompt},
 };
 use clap::Parser;
 
@@ -10,30 +10,26 @@ use clap::Parser;
 pub struct Init;
 
 impl Command for Init {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         if db_path.exists() {
             return Err(KyError::Init);
         }
 
-        let master = Master::new(&Prompt::theme())?;
+        let hashed = Master::confirm(&Prompt::theme())?.hash()?;
 
-        let hashed = master.hash()?;
+        let db = KyDb2::new(&db_path)?;
+        let wtxn = db.wtxn()?;
 
-        let env = KyEnv::connect(config.ensure_create(&db_path))?;
+        {
+            let mut tbl = db.open_write(&wtxn, KyTable::Master)?;
+            tbl.set(Master::KEY.into(), hashed)?;
+        }
 
-        let common_db = env.get_table(KyTable::Common)?;
-
-        let mut txn = env.write_txn()?;
-
-        common_db.set(&mut txn, &Encrypted::from(MASTER), &hashed)?;
-
-        txn.commit()?;
+        wtxn.commit()?;
 
         echo!("> Vault Initiliazed!");
-
-        env.close();
 
         Ok(())
     }

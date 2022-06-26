@@ -99,4 +99,10 @@ impl From<heed::Error> for KyError {
     }
 }
 
+impl From<redb::Error> for KyError {
+    fn from(s: redb::Error) -> Self {
+        Self::Any(s.to_string())
+    }
+}
+
 pub type KyResult<T> = Result<T, KyError>;

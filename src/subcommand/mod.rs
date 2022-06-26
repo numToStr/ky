@@ -24,7 +24,7 @@ use self::{
 };
 
 pub(self) trait Command {
-    fn exec(&self, config: Config) -> KyResult<()>;
+    fn exec(self, config: Config) -> KyResult<()>;
 }
 
 #[derive(Debug, Subcommand)]
@@ -93,7 +93,7 @@ pub enum SubCommand {
 }
 
 impl SubCommand {
-    pub fn exec(&self, config: Config) -> KyResult<()> {
+    pub fn exec(self, config: Config) -> KyResult<()> {
         match self {
             Self::Completion(c) => c.exec(config),
             Self::Init(c) => c.exec(config),

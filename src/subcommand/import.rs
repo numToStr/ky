@@ -21,7 +21,7 @@ pub struct Import {
 }
 
 impl Command for Import {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let import_path = match &self.path {
             Some(p) => p.to_path_buf(),
             _ => config.export_path(),
@@ -40,7 +40,7 @@ impl Command for Import {
             return Ok(());
         }
 
-        let master = Master::new(&theme)?;
+        let master = Master::confirm(&theme)?;
 
         if db_exist {
             remove_dir_all(&db_path)?;

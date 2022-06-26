@@ -1,12 +1,12 @@
+use std::convert::TryFrom;
+
 use super::Command;
 use crate::{
-    check_db,
     cli::{Config, PasswordParams},
     echo,
     lib::{
         entity::{Master, Password},
-        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
-        PREFIX,
+        Cipher, EntryKey, KyDb2, KyError, KyResult, KyTable, Prompt, PREFIX,
     },
 };
 use clap::Parser;
@@ -26,72 +26,66 @@ pub struct Edit {
 }
 
 impl Command for Edit {
-    fn exec(&self, config: Config) -> KyResult<()> {
-        let db_path = config.db_path();
-
-        check_db!(db_path);
-
+    fn exec(self, config: Config) -> KyResult<()> {
         let theme = Prompt::theme();
-        let master_pwd = Master::ask(&theme)?;
+        let master = Master::ask(&theme)?;
 
-        let env = KyEnv::connect(&db_path)?;
+        let db = KyDb2::connect(&config.db_path())?;
 
-        let common_db = env.get_table(KyTable::Common)?;
-        let pwd_db = env.get_table(KyTable::Password)?;
+        {
+            let rtxn = db.rtxn()?;
+            let master_tbl = db.open_read(&rtxn, KyTable::Master)?;
+            let hashed = master_tbl.get(&Master::KEY.into())?;
 
-        let rtxn = env.read_txn()?;
-
-        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
-
-        if !master_pwd.verify(hashed.as_ref())? {
-            return Err(KyError::MisMatch);
+            if !master.verify(hashed)? {
+                return Err(KyError::MisMatch);
+            }
         }
 
-        let master_cipher = Cipher::for_master(&master_pwd);
-        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let wtxn = db.wtxn()?;
 
-        let encrypted = pwd_db.get(&rtxn, &enc_key)?;
+        {
+            let mut pwd_tbl = db.open_write(&wtxn, KyTable::Password)?;
+            let key = Cipher::from(&master).encrypt(&self.key.clone().into())?;
+            let encrypted = pwd_tbl.get(&key)?;
 
-        rtxn.commit()?;
+            println!(
+                "  {}",
+                style("Type '-' to clear the field or Press ENTER to use the current value").dim()
+            );
 
-        println!(
-            "  {}",
-            style("Type '-' to clear the field or Press ENTER to use the current value").dim()
-        );
+            let data_cipher = Cipher::try_from((&master, &self.key))?;
 
-        let key_cipher = Cipher::for_key(&master_pwd, &self.key)?;
+            let old_val = Password::try_from(data_cipher.decrypt(&encrypted)?)?;
 
-        let old_val = Password::decrypt(&key_cipher, &encrypted)?;
+            let username = Prompt::username_with_default(&theme, old_val.username)?;
+            let website = Prompt::website_with_default(&theme, old_val.website)?;
+            let expires = Prompt::expires_with_default(&theme, old_val.expires)?;
+            let notes = Prompt::notes_with_default(&theme, old_val.note)?;
 
-        let username = Prompt::username_with_default(&theme, old_val.username)?;
-        let website = Prompt::website_with_default(&theme, old_val.website)?;
-        let expires = Prompt::expires_with_default(&theme, old_val.expires)?;
-        let notes = Prompt::notes_with_default(&theme, old_val.notes)?;
+            let password = if self.password {
+                let p = Password::generate(&self.pwd_opt);
+                println!("{} Password regenerated", style(PREFIX).bold());
+                p
+            } else {
+                old_val.password
+            };
 
-        let password = if self.password {
-            let p = Password::generate(&self.pwd_opt);
-            println!("{} Password regenerated", style(PREFIX).bold());
-            p
-        } else {
-            old_val.password
-        };
+            let new_val = {
+                let data = Password {
+                    password,
+                    username,
+                    website,
+                    expires,
+                    note: notes,
+                };
+                data_cipher.encrypt(&data.into())?
+            };
 
-        let new_val = Password {
-            password,
-            username,
-            website,
-            expires,
-            notes,
+            pwd_tbl.set(key, new_val)?;
         }
-        .encrypt(&key_cipher)?;
-
-        let mut wtxn = env.write_txn()?;
-
-        pwd_db.set(&mut wtxn, &enc_key, &new_val)?;
 
         wtxn.commit()?;
-
-        env.close();
 
         echo!("> Entry edited: {}", style(&self.key.as_ref()).bold());
 

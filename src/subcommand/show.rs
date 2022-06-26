@@ -1,11 +1,11 @@
+use std::convert::TryFrom;
+
 use super::Command;
 use crate::{
-    check_db,
     cli::Config,
     lib::{
         entity::{Master, Password},
-        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, Qr,
-        MASTER,
+        Cipher, EntryKey, KyDb2, KyError, KyResult, KyTable, Prompt, Qr,
     },
 };
 use clap::Parser;
@@ -20,7 +20,7 @@ pub struct Show {
     key: EntryKey,
 
     /// Show password in clear text
-    #[clap(short = 'C', long)]
+    #[clap(short, long)]
     clear: bool,
 
     /// Show password in a form of qr code
@@ -33,48 +33,32 @@ pub struct Show {
 }
 
 impl Command for Show {
-    fn exec(&self, config: Config) -> KyResult<()> {
-        let db_path = config.db_path();
+    fn exec(self, config: Config) -> KyResult<()> {
+        let master = Master::ask(&Prompt::theme())?;
 
-        check_db!(db_path);
+        let db = KyDb2::connect(&config.db_path())?;
 
-        let master_pwd = Master::ask(&Prompt::theme())?;
+        let rtxn = db.rtxn()?;
 
-        let env = KyEnv::connect(&db_path)?;
+        {
+            let master_tbl = db.open_read(&rtxn, KyTable::Master)?;
+            let hashed = master_tbl.get(&Master::KEY.into())?;
 
-        let common_db = env.get_table(KyTable::Common)?;
-        let pwd_db = env.get_table(KyTable::Password)?;
-
-        let rtxn = env.read_txn()?;
-        let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
-
-        if !master_pwd.verify(hashed.as_ref())? {
-            return Err(KyError::MisMatch);
+            if !master.verify(hashed)? {
+                return Err(KyError::MisMatch);
+            }
         }
 
-        let master_cipher = Cipher::for_master(&master_pwd);
-        let enc_key = master_cipher.encrypt(&Decrypted::from(&self.key))?;
-
-        // The crypted data returned from database
-        // Will be in this format password:username:website:expires:notes
-        let encrypted = pwd_db.get(&rtxn, &enc_key)?;
-
-        rtxn.commit()?;
-
-        env.close();
-
-        let key_master = Cipher::for_key(&master_pwd, &self.key)?;
-
-        let val = Password::decrypt(&key_master, &encrypted)?;
-
-        // We can use threads to decrypt each of them
-        // and later use .join() to grab the decrypted value
-        // Which will make this decryption way faster
-        // I tried and I failed, maybe next time
+        let data = {
+            let enc_key = Cipher::from(&master).encrypt(&self.key.clone().into())?;
+            let encrypted = db.open_read(&rtxn, KyTable::Password)?.get(&enc_key)?;
+            let decrypted = Cipher::try_from((&master, &self.key))?.decrypt(&encrypted)?;
+            Password::try_from(decrypted)?
+        };
 
         if self.qr_code {
-            let code = Qr::new(&val.password)?.render();
-            eprint!("{}", code);
+            let code = Qr::new(&data.password)?.render();
+            eprint!("{code}");
         }
 
         // If the output is muted then no need to print the table
@@ -83,18 +67,18 @@ impl Command for Show {
         }
 
         let decrypted = [
-            Tr("Username", val.username),
+            Tr("Username", data.username),
             Tr(
                 "Password",
                 if self.clear {
-                    val.password
+                    data.password
                 } else {
                     "*".repeat(15)
                 },
             ),
-            Tr("Website", val.website),
-            Tr("Expires", val.expires),
-            Tr("Notes", val.notes),
+            Tr("Website", data.website),
+            Tr("Expires", data.expires),
+            Tr("Note", data.note),
         ];
 
         let table = Table::new(&decrypted)
@@ -103,7 +87,7 @@ impl Command for Show {
             .with(Modify::new(Segment::all()).with(Alignment::left()));
 
         // Don't println! because last line of table already contains a line feed
-        print!("{}", table);
+        print!("{table}");
 
         Ok(())
     }

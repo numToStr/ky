@@ -1,4 +1,4 @@
-use std::{fs::remove_dir_all, path::PathBuf};
+use std::path::PathBuf;
 
 use super::Command;
 use crate::{
@@ -15,17 +15,17 @@ pub struct Restore {
     path: Option<PathBuf>,
 
     /// Ignore already initialized vault, if any
-    #[clap(short = 'I', long)]
+    #[clap(short, long)]
     ignore: bool,
 }
 
 impl Command for Restore {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let theme = Prompt::theme();
         // let master_pwd = Password::ask_master(&theme)?;
 
-        let backup_path = match &self.path {
-            Some(x) => x.to_path_buf(),
+        let backup_path = match self.path {
+            Some(x) => x,
             _ => config.backup_path(),
         };
 
@@ -33,18 +33,11 @@ impl Command for Restore {
             return Err(KyError::BackupDontExist);
         }
 
-        let db_path = config.db_path();
-        let db_exist = db_path.exists();
-
-        if !self.ignore && db_exist && !Prompt::vault_exist(&theme)? {
+        if !self.ignore && config.db_path().exists() && !Prompt::vault_exist(&theme)? {
             return Ok(());
         }
 
-        if db_exist {
-            remove_dir_all(&db_path)?;
-        }
-
-        Vault::new(&backup_path).restore(&db_path)?;
+        Vault::restore(&backup_path, &config.vault_path())?;
 
         echo!("> Vault restored!");
 

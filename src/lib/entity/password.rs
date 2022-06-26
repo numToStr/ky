@@ -1,3 +1,5 @@
+use std::{convert::TryFrom, fmt::Display};
+
 use crate::{
     cli::PasswordParams,
     lib::{Cipher, Decrypted, Encrypted, KyError, KyResult},
@@ -16,7 +18,7 @@ pub struct Password {
     pub username: String,
     pub website: String,
     pub expires: String,
-    pub notes: String,
+    pub note: String,
 }
 
 impl Password {
@@ -32,8 +34,8 @@ impl Password {
                     let excluded = x.as_bytes();
 
                     charset
-                        .to_vec()
-                        .into_iter()
+                        .iter()
+                        .copied()
                         .filter(|c| !excluded.contains(c))
                         .collect()
                 }
@@ -58,43 +60,52 @@ impl Password {
         Ok(String::from_utf8_lossy(&dehexed).to_string())
     }
 
+    #[deprecated = "Use self.to_string()"]
     pub fn encrypt(self, cipher: &Cipher) -> KyResult<Encrypted> {
-        let password = hex::encode(self.password);
-        let username = hex::encode(self.username);
-        let website = hex::encode(self.website);
-        let expires = hex::encode(self.expires);
-        let notes = hex::encode(self.notes);
-
-        let val = format!(
-            "{}{d}{}{d}{}{d}{}{d}{}",
-            password,
-            username,
-            website,
-            expires,
-            notes,
-            d = DELIM,
-        );
-
-        cipher.encrypt(&Decrypted::from(val))
+        cipher.encrypt(&self.to_string().into())
     }
 
+    #[deprecated = "Use Password::try_from(decrypted)"]
     pub fn decrypt(cipher: &Cipher, encrypted: &Encrypted) -> KyResult<Self> {
-        let decrypted: String = cipher.decrypt(encrypted)?.into();
+        let decrypted = cipher.decrypt(encrypted)?;
 
-        let mut keys = decrypted.splitn(5, DELIM);
+        Self::try_from(decrypted)
+    }
+}
+
+impl Display for Password {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let password = hex::encode(&self.password);
+        let username = hex::encode(&self.username);
+        let website = hex::encode(&self.website);
+        let expires = hex::encode(&self.expires);
+        let note = hex::encode(&self.note);
+
+        write!(
+            f,
+            "{password}{DELIM}{username}{DELIM}{website}{DELIM}{expires}{DELIM}{note}",
+        )
+    }
+}
+
+impl TryFrom<Decrypted> for Password {
+    type Error = KyError;
+
+    fn try_from(decrypted: Decrypted) -> Result<Self, Self::Error> {
+        let mut keys = decrypted.as_ref().splitn(5, DELIM);
 
         let password = Self::dehex(keys.next())?;
         let username = Self::dehex(keys.next())?;
         let website = Self::dehex(keys.next())?;
         let expires = Self::dehex(keys.next())?;
-        let notes = Self::dehex(keys.next())?;
+        let note = Self::dehex(keys.next())?;
 
         Ok(Self {
             password,
             username,
             website,
             expires,
-            notes,
+            note,
         })
     }
 }

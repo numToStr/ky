@@ -4,8 +4,8 @@ use crate::{
     cli::Config,
     echo,
     lib::{
-        entity::Master, Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable,
-        Prompt, MASTER,
+        entity::Master, Cipher, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt,
+        MASTER,
     },
 };
 use clap::Parser;
@@ -18,7 +18,7 @@ pub struct Remove {
 }
 
 impl Command for Remove {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -28,18 +28,18 @@ impl Command for Remove {
 
         let env = KyEnv::connect(&db_path)?;
 
-        let common_db = env.get_table(KyTable::Common)?;
+        let common_db = env.get_table(KyTable::Master)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master.verify(hashed.as_ref())? {
+        if !master.verify(hashed)? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_master(&master);
-        let key = key_cipher.encrypt(&Decrypted::from(&self.key))?;
+        let key_cipher = Cipher::from(&master);
+        let key = key_cipher.encrypt(&self.key.clone().into())?;
 
         let _ = pwd_db.get(&rtxn, &key)?;
 

@@ -11,7 +11,7 @@ use super::Command;
 pub struct Ls;
 
 impl Command for Ls {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -20,14 +20,14 @@ impl Command for Ls {
 
         let env = KyEnv::connect(&db_path)?;
 
-        let common_db = env.get_table(KyTable::Common)?;
+        let common_db = env.get_table(KyTable::Master)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master.verify(hashed.as_ref())? {
+        if !master.verify(hashed)? {
             return Err(KyError::MisMatch);
         }
 
@@ -39,7 +39,7 @@ impl Command for Ls {
         if keys.is_empty() {
             println!("> No entries found!");
         } else {
-            let key_cipher = Cipher::for_master(&master);
+            let key_cipher = Cipher::from(&master);
 
             for (key, _) in keys {
                 let key = key_cipher.decrypt(&key)?;

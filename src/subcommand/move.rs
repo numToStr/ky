@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use super::Command;
 use crate::{
     check_db,
@@ -5,7 +7,7 @@ use crate::{
     echo,
     lib::{
         entity::{Master, Password},
-        Cipher, Decrypted, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
+        Cipher, Encrypted, EntryKey, KyEnv, KyError, KyResult, KyTable, Prompt, MASTER,
     },
 };
 use clap::Parser;
@@ -21,7 +23,7 @@ pub struct Move {
 }
 
 impl Command for Move {
-    fn exec(&self, config: Config) -> KyResult<()> {
+    fn exec(self, config: Config) -> KyResult<()> {
         let db_path = config.db_path();
 
         check_db!(db_path);
@@ -30,26 +32,26 @@ impl Command for Move {
 
         let env = KyEnv::connect(&db_path)?;
 
-        let common_db = env.get_table(KyTable::Common)?;
+        let common_db = env.get_table(KyTable::Master)?;
         let pwd_db = env.get_table(KyTable::Password)?;
 
         let rtxn = env.read_txn()?;
 
         let hashed = common_db.get(&rtxn, &Encrypted::from(MASTER))?;
 
-        if !master.verify(hashed.as_ref())? {
+        if !master.verify(hashed)? {
             return Err(KyError::MisMatch);
         }
 
-        let key_cipher = Cipher::for_master(&master);
+        let key_cipher = Cipher::from(&master);
 
         // first check if the old key exist or not
         // If exist, then retrieve the value
-        let old_key = key_cipher.encrypt(&Decrypted::from(&self.old_key))?;
+        let old_key = key_cipher.encrypt(&self.old_key.clone().into())?;
         let encrypted = pwd_db.get(&rtxn, &old_key)?;
 
         // now check if the new key exists or not
-        let new_key = key_cipher.encrypt(&Decrypted::from(&self.new_key))?;
+        let new_key = key_cipher.encrypt(&self.new_key.clone().into())?;
         if pwd_db.get(&rtxn, &new_key).is_ok() {
             return Err(KyError::Exist);
         }
@@ -57,12 +59,12 @@ impl Command for Move {
         rtxn.commit()?;
 
         echo!("- Decrypting old details...");
-        let old_cipher = Cipher::for_key(&master, &self.old_key)?;
+        let old_cipher = Cipher::try_from((&master, &self.old_key))?;
 
         let old_val = Password::decrypt(&old_cipher, &encrypted)?;
 
         println!("- Encrypting new details...");
-        let new_cipher = Cipher::for_key(&master, &self.new_key)?;
+        let new_cipher = Cipher::try_from((&master, &self.new_key))?;
         let new_val = Password {
             password: old_cipher
                 .decrypt(&Encrypted::from(old_val.password))?
@@ -70,7 +72,7 @@ impl Command for Move {
             username: old_val.username,
             website: old_val.website,
             expires: old_val.expires,
-            notes: old_val.notes,
+            note: old_val.note,
         }
         .encrypt(&new_cipher)?;
 
