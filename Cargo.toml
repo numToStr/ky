@@ -30,7 +30,7 @@ qrcodegen = "1.8.0"
 # heed = { version = "0.11.0", default-features = false, features = ["mdbx"] }
 heed = { version = "0.11.0", default-features = false, features = ["lmdb"] }
 csv = "1.1.6"
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.139", features = ["derive"] }
 hkdf = "0.12.3"
 
 [profile.dev]
